@@ -1,0 +1,165 @@
+{
+  "collections": {
+    "items": {
+      "description": "Inventory items catalog master",
+      "fields": {
+        "id": "string",
+        "itemCode": "string",
+        "itemName": "string",
+        "categoryId": "string",
+        "unitId": "string",
+        "currentQty": "number",
+        "averageRate": "number",
+        "stockValue": "number"
+      }
+    },
+    "categories": {
+      "description": "Item categories master data",
+      "fields": {
+        "id": "string",
+        "code": "string",
+        "name": "string",
+        "active": "boolean"
+      }
+    },
+    "units": {
+      "description": "Units of measurement",
+      "fields": {
+        "id": "string",
+        "code": "string",
+        "name": "string",
+        "active": "boolean"
+      }
+    },
+    "departments": {
+      "description": "Plant departments & cost centres",
+      "fields": {
+        "id": "string",
+        "code": "string",
+        "name": "string",
+        "active": "boolean"
+      }
+    },
+    "stores": {
+      "description": "Warehouse and store room locations",
+      "fields": {
+        "id": "string",
+        "code": "string",
+        "name": "string",
+        "active": "boolean"
+      }
+    },
+    "suppliers": {
+      "description": "Approved vendors list",
+      "fields": {
+        "id": "string",
+        "code": "string",
+        "name": "string",
+        "active": "boolean"
+      }
+    },
+    "ledger": {
+      "description": "Continuous chronological stock ledger entries",
+      "fields": {
+        "id": "string",
+        "transactionDate": "string",
+        "transactionType": "string",
+        "referenceNumber": "string",
+        "itemId": "string",
+        "storeId": "string",
+        "inwardQty": "number",
+        "outwardQty": "number",
+        "runningQty": "number"
+      }
+    },
+    "stockInReceipts": {
+      "description": "Goods Inward Receipt notes (GRN)",
+      "fields": {
+        "id": "string",
+        "grnNumber": "string",
+        "grnDate": "string",
+        "supplierId": "string"
+      }
+    },
+    "materialIssues": {
+      "description": "Material Issue Notes (MIN)",
+      "fields": {
+        "id": "string",
+        "issueNumber": "string",
+        "issueDate": "string",
+        "departmentId": "string"
+      }
+    },
+    "materialReturns": {
+      "description": "Material Return Notes (MRN)",
+      "fields": {
+        "id": "string",
+        "returnNumber": "string",
+        "returnDate": "string",
+        "storeId": "string"
+      }
+    },
+    "stockTransfers": {
+      "description": "Inter-store transfer entries",
+      "fields": {
+        "id": "string",
+        "transferNumber": "string",
+        "transferDate": "string",
+        "sourceStoreId": "string",
+        "targetStoreId": "string"
+      }
+    },
+    "stockAdjustments": {
+      "description": "Physical count audit adjustments",
+      "fields": {
+        "id": "string",
+        "adjustmentNumber": "string",
+        "adjustmentDate": "string",
+        "storeId": "string"
+      }
+    },
+    "monthlyClosings": {
+      "description": "Period closing valuation logs",
+      "fields": {
+        "id": "string",
+        "period": "string",
+        "closedDate": "string"
+      }
+    },
+    "alerts": {
+      "description": "Active stock health and threshold alerts",
+      "fields": {
+        "id": "string",
+        "severity": "string",
+        "title": "string",
+        "message": "string"
+      }
+    },
+    "auditLogs": {
+      "description": "User actions and configuration audit trail",
+      "fields": {
+        "id": "string",
+        "timestamp": "string",
+        "userId": "string",
+        "action": "string"
+      }
+    },
+    "users": {
+      "description": "User profiles and RBAC definitions",
+      "fields": {
+        "id": "string",
+        "name": "string",
+        "email": "string",
+        "role": "string"
+      }
+    },
+    "settings": {
+      "description": "Company profile and system-wide configurations",
+      "fields": {
+        "companyName": "string",
+        "gstReference": "string",
+        "valuationMethod": "string"
+      }
+    }
+  }
+}

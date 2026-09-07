@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { loadInitialState, saveStateToStorage, AppState } from './services/store';
 import { Item, ViewType } from './types';
 import { Header } from './components/Header';
@@ -8,6 +8,9 @@ import { BarcodeScannerModal } from './components/BarcodeScannerModal';
 import { ItemDetailModal } from './components/ItemDetailModal';
 import { ItemFormModal } from './components/ItemFormModal';
 import { ApiDocModal } from './components/ApiDocModal';
+
+import { isCollectionEmpty, COLLECTIONS } from './services/firebase';
+import { seedInitialStateToFirebase, hydrateStateFromFirebase, syncStateDiffToFirebase } from './services/syncManager';
 
 import { DashboardView } from './views/DashboardView';
 import { ItemMasterView } from './views/ItemMasterView';
@@ -46,10 +49,57 @@ export const App: React.FC = () => {
   const [selectedItemForEdit, setSelectedItemForEdit] = useState<Item | null>(null);
   const [isItemFormOpen, setIsItemFormOpen] = useState(false);
 
-  // Save to localStorage on state changes
+  const prevStateRef = useRef<AppState>(state);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Initialize and check Firestore on startup
+  useEffect(() => {
+    const initFirebaseSync = async () => {
+      try {
+        setIsSyncing(true);
+        setState(prev => ({ ...prev, isFirebaseSynced: false }));
+        
+        const isEmpty = await isCollectionEmpty(COLLECTIONS.items);
+        if (isEmpty) {
+          console.log('Firebase Firestore is empty. Seeding initial state...');
+          await seedInitialStateToFirebase(state);
+          setState(prev => ({ ...prev, isFirebaseSynced: true }));
+        } else {
+          console.log('Firebase Firestore has data. Hydrating state...');
+          const hydratedData = await hydrateStateFromFirebase();
+          setState(prev => {
+            const updated = {
+              ...prev,
+              ...hydratedData,
+              settings: hydratedData.settings ? { ...prev.settings, ...hydratedData.settings } : prev.settings,
+              isFirebaseSynced: true
+            };
+            saveStateToStorage(updated);
+            prevStateRef.current = updated;
+            return updated;
+          });
+        }
+      } catch (err) {
+        console.error('Failed to initialize Firebase Sync:', err);
+      } finally {
+        setIsSyncing(false);
+      }
+    };
+
+    initFirebaseSync();
+  }, []);
+
+  // Save to localStorage on state changes and sync diffs to Firebase
   useEffect(() => {
     saveStateToStorage(state);
-  }, [state]);
+    
+    // Sync diff to Firebase if connection is active and we are not in initial hydrating phase
+    if (state.isFirebaseSynced && !isSyncing) {
+      syncStateDiffToFirebase(prevStateRef.current, state);
+    }
+    
+    prevStateRef.current = state;
+  }, [state, isSyncing]);
 
   const handleActiveViewChange = (view: ViewType) => {
     setState(prev => ({ ...prev, activeView: view }));
