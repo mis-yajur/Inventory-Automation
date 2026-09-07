@@ -313,18 +313,16 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-black">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-500 selection:text-white">
       {/* Top Header Navigation */}
       <Header
-        activeUser={state.activeUser}
-        stores={state.stores}
-        selectedStoreId={state.selectedStoreId}
-        onSelectStore={handleSelectStore}
+        state={state}
+        setState={setState}
         onOpenSearch={() => setIsSearchOpen(true)}
         onOpenScanner={() => setIsScannerOpen(true)}
-        onOpenApiDoc={() => setIsApiDocOpen(true)}
-        isOfflineMode={state.isOfflineMode}
-        cloudSyncStatus={state.cloudSyncStatus}
+        onOpenApiDocs={() => setIsApiDocOpen(true)}
+        activeTab={state.activeView}
+        setActiveTab={handleActiveViewChange}
       />
 
       {/* Main Container Layout */}
@@ -337,7 +335,7 @@ export const App: React.FC = () => {
         />
 
         {/* View Workspace Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-950">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-50/50">
           <div className="max-w-7xl mx-auto space-y-6">
             {renderActiveView()}
           </div>

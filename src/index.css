@@ -1,1 +1,51 @@
 @import "tailwindcss";
+
+@theme {
+  /* Define light slate colors mapped onto the existing slate scale */
+  --color-slate-950: #f8fafc; /* Main application background */
+  --color-slate-900: #ffffff; /* Card backgrounds & container surfaces */
+  --color-slate-800: #f1f5f9; /* Subtle borders & dividers */
+  --color-slate-700: #e2e8f0; /* Standard borders */
+  --color-slate-600: #cbd5e1; /* Secondary borders */
+  --color-slate-500: #64748b; /* Secondary gray labels / inactive tabs */
+  --color-slate-400: #475569; /* Intermediate text labels */
+  --color-slate-300: #334155; /* Secondary text */
+  --color-slate-200: #1e293b; /* Primary body text */
+  --color-slate-100: #0f172a; /* Titles / high-contrast headers */
+  --color-slate-50: #ffffff;  /* Input boxes baseline background */
+
+  /* Define blue colors mapped onto the existing emerald/green scale for blue accenting */
+  --color-emerald-950: #eff6ff; /* Banner highlights / toast backdrops */
+  --color-emerald-900: #dbeafe; /* Selected active highlight backs */
+  --color-emerald-800: #bfdbfe; /* Stronger highlights */
+  --color-emerald-700: #1d4ed8; /* Darker blue text */
+  --color-emerald-600: #2563eb; /* Corporate royal blue (primary actions) */
+  --color-emerald-500: #3b82f6; /* Accent blue interactive elements */
+  --color-emerald-400: #2563eb; /* Highlights & critical status */
+  --color-emerald-300: #60a5fa; /* Focus outline */
+  --color-emerald-200: #93c5fd; /* Soft focus borders */
+  --color-emerald-100: #dbeafe; /* Background badges */
+  --color-emerald-50: #f0f9ff;  /* Extremely light highlights */
+
+  /* Map cyan/teal to indigo & blues to ensure perfect harmony */
+  --color-cyan-500: #4f46e5;
+  --color-cyan-400: #3b82f6;
+  --color-teal-500: #0284c7;
+  --color-teal-400: #0369a1;
+}
+
+/* Custom scrollbars and styling tweaks to ensure a professional look */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

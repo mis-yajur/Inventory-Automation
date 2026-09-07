@@ -1,6 +1,10 @@
 {
   "name": "IMS AUTOMATION Yajur",
   "description": "Enterprise-grade inventory management and stock control portal for automating warehouse operations, tracking stock ledger, consumption analytics, reorder planning, ABC analysis, and offline synchronization.",
-  "requestFramePermissions": ["camera"],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
