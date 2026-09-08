@@ -353,3 +353,12 @@ export interface CompanySettings {
   monthlyCloseLock: boolean;
   darkMode: boolean;
 }
+
+export interface PluginModule {
+  id: string;
+  name: string;
+  version: string;
+  description: string;
+  enabled: boolean;
+  author: string;
+}

@@ -14,14 +14,17 @@ export const MonthlyClosingView: React.FC<MonthlyClosingViewProps> = ({ state, s
   const handleRunMonthlyClosing = () => {
     const totalVal = state.items.reduce((s, i) => s + i.stockValue, 0);
 
-    const newClosing = {
+    const newClosing: import('../types').MonthlyClosing = {
       id: `cls-${Date.now()}`,
-      period: closingMonth,
-      closedDate: new Date().toISOString().split('T')[0],
-      totalSKUs: state.items.length,
-      totalValuation: totalVal,
+      monthYear: closingMonth,
+      monthName: closingMonth,
+      storeId: 'ALL',
+      storeName: 'All Stores',
+      closingValue: totalVal,
+      status: 'Closed',
       closedBy: state.activeUser.name,
-      status: 'Closed' as const
+      closedAt: new Date().toISOString().split('T')[0],
+      items: []
     };
 
     setState(prev => {
@@ -36,7 +39,7 @@ export const MonthlyClosingView: React.FC<MonthlyClosingViewProps> = ({ state, s
             userId: prev.activeUser.id,
             userName: prev.activeUser.name,
             module: 'Monthly Closing',
-            action: 'CLOSE_PERIOD' as const,
+            action: 'MONTHLY_CLOSE',
             record: closingMonth,
             previousValue: 'Open Period',
             newValue: 'Closed & Locked',
@@ -99,8 +102,8 @@ export const MonthlyClosingView: React.FC<MonthlyClosingViewProps> = ({ state, s
           <thead className="bg-slate-950 uppercase text-[10px] font-bold text-slate-400">
             <tr>
               <th className="p-3">Period</th>
+              <th className="p-3">Store</th>
               <th className="p-3">Closed Date</th>
-              <th className="p-3 text-right">Total SKUs</th>
               <th className="p-3 text-right">Locked Valuation</th>
               <th className="p-3">Closed By</th>
               <th className="p-3 text-center">Status</th>
@@ -109,10 +112,10 @@ export const MonthlyClosingView: React.FC<MonthlyClosingViewProps> = ({ state, s
           <tbody className="divide-y divide-slate-800/60">
             {state.monthlyClosings.map(mc => (
               <tr key={mc.id}>
-                <td className="p-3 font-mono font-bold text-emerald-400">{mc.period}</td>
-                <td className="p-3 font-mono text-slate-400">{mc.closedDate}</td>
-                <td className="p-3 text-right font-mono text-slate-300">{mc.totalSKUs}</td>
-                <td className="p-3 text-right font-mono font-bold text-emerald-400">₹{mc.totalValuation.toLocaleString('en-IN')}</td>
+                <td className="p-3 font-mono font-bold text-emerald-400">{mc.monthYear}</td>
+                <td className="p-3 font-semibold text-slate-200">{mc.storeName}</td>
+                <td className="p-3 font-mono text-slate-400">{mc.closedAt}</td>
+                <td className="p-3 text-right font-mono font-bold text-emerald-400">₹{mc.closingValue.toLocaleString('en-IN')}</td>
                 <td className="p-3 text-slate-300">{mc.closedBy}</td>
                 <td className="p-3 text-center">
                   <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-bold text-[10px] border border-slate-700">

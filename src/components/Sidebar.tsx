@@ -90,18 +90,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-[calc(100vh-57px)] sticky top-[57px] shrink-0 text-slate-700 select-none overflow-y-auto shadow-sm">
-      {/* Brand Header with Lotus styling */}
+      {/* Brand Header */}
       <div className="p-4 border-b border-slate-800 bg-slate-950/60">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-emerald-900/30">
-            🌸
+            Y
           </div>
           <div>
             <h1 className="font-extrabold text-sm text-slate-100 tracking-tight leading-none">
               IMS AUTOMATION
             </h1>
             <p className="text-[11px] font-semibold text-emerald-600 mt-1">
-              Lotus Yajur Portal
+              Yajur Portal
             </p>
           </div>
         </div>

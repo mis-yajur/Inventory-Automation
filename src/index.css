@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* Define warm ivory, soft creams, and lotus charcoal colors mapped onto the slate scale */
+  /* Define warm ivory, soft creams, and rich charcoal colors mapped onto the slate scale */
   --color-slate-950: #fbf9f6; /* Ivory/Cream main page background */
   --color-slate-900: #ffffff; /* Clean white card surfaces */
   --color-slate-800: #f5f0eb; /* Soft warm-gray dividers */
@@ -14,12 +14,12 @@
   --color-slate-100: #1a0f11; /* Maximum contrast dark maroon titles */
   --color-slate-50: #fffdfb;  /* Input textareas backdrop */
 
-  /* Define lotus flower rose/pink scale mapped onto the emerald/green scale for active accenting */
+  /* Define flower rose/pink scale mapped onto the emerald/green scale for active accenting */
   --color-emerald-950: #fdf2f8; /* Soft pink petal highlights / toasts */
   --color-emerald-900: #fce7f3; /* Selected item petal-pink backdrop */
   --color-emerald-800: #fbcfe8; /* Focus outlines */
-  --color-emerald-700: #be185d; /* Elegant deep lotus rose-pink text */
-  --color-emerald-600: #db2777; /* Royal lotus pink (primary actions / active items) */
+  --color-emerald-700: #be185d; /* Elegant deep rose-pink text */
+  --color-emerald-600: #db2777; /* Royal pink (primary actions / active items) */
   --color-emerald-500: #ec4899; /* Interactive state pink-rose */
   --color-emerald-400: #db2777; /* Hotspots and key action text */
   --color-emerald-300: #f472b6; /* Active borders */
@@ -30,7 +30,7 @@
   /* Map cyan and other accents to warm stamen gold and organic leaf teals */
   --color-cyan-500: #eab308; /* Warm stamen gold */
   --color-cyan-400: #f59e0b; /* Gold highlights */
-  --color-teal-500: #0d9488; /* Serene lotus pond leaf teal */
+  --color-teal-500: #0d9488; /* Serene pond leaf teal */
   --color-teal-400: #14b8a6; /* Soft teal accents */
 }
 

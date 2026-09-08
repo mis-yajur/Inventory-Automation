@@ -2,7 +2,7 @@ import {
   Item, Category, Unit, Department, Store, Supplier,
   StockLedgerEntry, StockInReceipt, MaterialIssue, MaterialReturn,
   StockTransfer, StockAdjustment, MonthlyClosing, AlertNotification,
-  AuditLog, UserRole, CompanySettings
+  AuditLog, UserRole, CompanySettings, PluginModule
 } from '../types';
 import { calculateWeightedAverageRate, getItemInventoryStatus } from '../utils/calculations';
 
@@ -31,6 +31,7 @@ export interface AppState {
   activeUser: UserRole;
   isOfflineMode: boolean;
   isFirebaseSynced: boolean;
+  plugins: PluginModule[];
 }
 
 export const initialCategories: Category[] = [
@@ -881,7 +882,8 @@ export function loadInitialState(): AppState {
         activeStoreId: parsed.activeStoreId || 'str-1',
         activeUser: parsed.activeUser || initialUsers[0],
         isOfflineMode: false,
-        isFirebaseSynced: true
+        isFirebaseSynced: true,
+        plugins: parsed.plugins || []
       };
     }
   } catch (err) {
@@ -909,7 +911,8 @@ export function loadInitialState(): AppState {
     activeStoreId: 'str-1',
     activeUser: initialUsers[0],
     isOfflineMode: false,
-    isFirebaseSynced: true
+    isFirebaseSynced: true,
+    plugins: []
   };
 }
 
@@ -934,7 +937,8 @@ export function saveStateToStorage(state: AppState): void {
       users: state.users,
       settings: state.settings,
       activeStoreId: state.activeStoreId,
-      activeUser: state.activeUser
+      activeUser: state.activeUser,
+      plugins: state.plugins
     }));
   } catch (err) {
     console.error('Failed to save state to localStorage:', err);
