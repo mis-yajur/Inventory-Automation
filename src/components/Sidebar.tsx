@@ -72,7 +72,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       title: 'ANALYTICS & REPORTS',
       items: [
-        { id: 'stock_ledger', label: 'Transaction Ledger', icon: FileText },
+        { id: 'stock_ledger', label: 'Item Ledger (Date-Wise)', icon: FileText },
+        { id: 'dept_ledger', label: 'Department Ledger (Date & Month)', icon: Network },
         { id: 'stock_valuation', label: 'Asset Valuation', icon: BarChart2 },
         { id: 'abc_analysis', label: 'ABC Classification', icon: BarChart2 },
         { id: 'fast_slow_moving', label: 'FSN Analysis', icon: TrendingUp },

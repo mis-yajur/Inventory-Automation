@@ -1,4 +1,4 @@
-import { AppState } from './store';
+import { AppState, isDummyItem, isDummyLedgerEntry } from './store';
 import {
   saveToFirebase,
   deleteFromFirebase,
@@ -12,6 +12,41 @@ import {
 // Helper to sanitize any Firestore data and ignore function types
 function sanitizeDoc(doc: any) {
   return JSON.parse(JSON.stringify(doc));
+}
+
+// Purge any legacy dummy / placeholder documents directly from Firestore
+export async function purgeLegacyDummyDataFromFirebase(): Promise<void> {
+  try {
+    const rawItems = await fetchCollection<any>(COLLECTIONS.items);
+    for (const itm of rawItems) {
+      if (isDummyItem(itm)) {
+        await deleteFromFirebase(COLLECTIONS.items, itm.id);
+      }
+    }
+
+    const rawLedger = await fetchCollection<any>(COLLECTIONS.ledger);
+    for (const led of rawLedger) {
+      if (isDummyLedgerEntry(led)) {
+        await deleteFromFirebase(COLLECTIONS.ledger, led.id);
+      }
+    }
+
+    const rawAlerts = await fetchCollection<any>(COLLECTIONS.alerts);
+    for (const alt of rawAlerts) {
+      if (alt.id && /^alt-[1-5]$/.test(alt.id)) {
+        await deleteFromFirebase(COLLECTIONS.alerts, alt.id);
+      }
+    }
+
+    const rawAudit = await fetchCollection<any>(COLLECTIONS.auditLogs);
+    for (const aud of rawAudit) {
+      if (aud.id && /^aud-[1-4]$/.test(aud.id)) {
+        await deleteFromFirebase(COLLECTIONS.auditLogs, aud.id);
+      }
+    }
+  } catch (err) {
+    console.error('Error while purging legacy dummy data from Firebase:', err);
+  }
 }
 
 // Full seeding helper to upload local state to Firebase Firestore
@@ -89,22 +124,27 @@ export async function hydrateStateFromFirebase(): Promise<Partial<AppState>> {
 
     const settingsDoc = settingsList.find(s => s.id === 'company_profile');
 
+    const cleanItems = (items || []).filter(i => !isDummyItem(i));
+    const cleanLedger = (ledger || []).filter(l => !isDummyLedgerEntry(l));
+    const cleanAlerts = (alerts || []).filter(a => !a.id || !/^alt-[1-5]$/.test(a.id));
+    const cleanAuditLogs = (auditLogs || []).filter(al => !al.id || !/^aud-[1-4]$/.test(al.id));
+
     return {
-      items: items.length ? items : [],
+      items: cleanItems,
       categories: categories.length ? categories : [],
       units: units.length ? units : [],
       departments: departments.length ? departments : [],
       stores: stores.length ? stores : [],
       suppliers: suppliers.length ? suppliers : [],
-      ledger: ledger.length ? ledger : [],
+      ledger: cleanLedger,
       stockInReceipts: stockInReceipts.length ? stockInReceipts : [],
       materialIssues: materialIssues.length ? materialIssues : [],
       materialReturns: materialReturns.length ? materialReturns : [],
       stockTransfers: stockTransfers.length ? stockTransfers : [],
       stockAdjustments: stockAdjustments.length ? stockAdjustments : [],
       monthlyClosings: monthlyClosings.length ? monthlyClosings : [],
-      alerts: alerts.length ? alerts : [],
-      auditLogs: auditLogs.length ? auditLogs : [],
+      alerts: cleanAlerts,
+      auditLogs: cleanAuditLogs,
       users: users.length ? users : [],
       settings: settingsDoc ? { ...settingsDoc } : undefined
     };

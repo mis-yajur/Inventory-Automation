@@ -11,24 +11,15 @@ interface StockInViewProps {
 
 export const StockInView: React.FC<StockInViewProps> = ({ state, setState }) => {
   const [showNew, setShowNew] = useState(false);
-  const [storeId, setStoreId] = useState(state.stores[0]?.id || 'str-1');
-  const [supplierId, setSupplierId] = useState(state.suppliers[0]?.id || 'sup-1');
-  const [poReference, setPoReference] = useState(`PO/2026-27/0${Math.floor(100 + Math.random() * 900)}`);
-  const [challanNo, setChallanNo] = useState(`CH-${Math.floor(1000 + Math.random() * 9000)}`);
-  const [invoiceNo, setInvoiceNo] = useState(`INV-${Math.floor(10000 + Math.random() * 90000)}`);
+  const [storeId, setStoreId] = useState(state.stores[0]?.id || '');
+  const [supplierId, setSupplierId] = useState(state.suppliers[0]?.id || '');
+  const [poReference, setPoReference] = useState('');
+  const [challanNo, setChallanNo] = useState('');
+  const [invoiceNo, setInvoiceNo] = useState('');
   const [remarks, setRemarks] = useState('');
   const [qcHold, setQcHold] = useState(false);
 
-
-  const [receiptItems, setReceiptItems] = useState<StockInItem[]>([
-    {
-      itemId: state.items[0]?.id || '',
-      qty: 10,
-      unit: state.items[0]?.unitName || 'PCS',
-      rate: state.items[0]?.averageRate || 100,
-      value: (10 * (state.items[0]?.averageRate || 100))
-    }
-  ]);
+  const [receiptItems, setReceiptItems] = useState<StockInItem[]>([]);
 
   const [selectedReceiptForPrint, setSelectedReceiptForPrint] = useState<StockInReceipt | null>(null);
 

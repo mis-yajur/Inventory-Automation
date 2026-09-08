@@ -7,6 +7,7 @@ import { GlobalSearchModal } from './components/GlobalSearchModal';
 import { BarcodeScannerModal } from './components/BarcodeScannerModal';
 import { ItemDetailModal } from './components/ItemDetailModal';
 import { ItemFormModal } from './components/ItemFormModal';
+import { BulkItemUploadModal } from './components/BulkItemUploadModal';
 import { ApiDocModal } from './components/ApiDocModal';
 import { Lock } from 'lucide-react';
 
@@ -33,6 +34,7 @@ import { ReorderManagementView } from './views/ReorderManagementView';
 import { StockPlanningView } from './views/StockPlanningView';
 import { MonthlyClosingView } from './views/MonthlyClosingView';
 import { StockLedgerView } from './views/StockLedgerView';
+import { DepartmentLedgerView } from './views/DepartmentLedgerView';
 import { StockValuationReportView } from './views/StockValuationReportView';
 import { AbcAnalysisView } from './views/AbcAnalysisView';
 import { FastSlowMovingView } from './views/FastSlowMovingView';
@@ -53,6 +55,7 @@ export const App: React.FC = () => {
   const [selectedItemForView, setSelectedItemForView] = useState<Item | null>(null);
   const [selectedItemForEdit, setSelectedItemForEdit] = useState<Item | null>(null);
   const [isItemFormOpen, setIsItemFormOpen] = useState(false);
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
 
   const prevStateRef = useRef<AppState>(state);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -367,12 +370,12 @@ export const App: React.FC = () => {
         bin: itemData.bin || 'B01',
         minStock: itemData.minStock || 10,
         maxStock: itemData.maxStock || 100,
-        reorderLevel: itemData.reorderLevel || 25,
-        reorderQty: itemData.reorderQty || 50,
-        leadTimeDays: itemData.leadTimeDays || 7,
-        safetyFactor: 25,
-        safetyStock: itemData.safetyStock || 15,
-        barcode: itemData.barcode || `8901234${Math.floor(100000 + Math.random() * 900000)}`,
+        reorderLevel: itemData.reorderLevel !== undefined ? Number(itemData.reorderLevel) : 0,
+        reorderQty: itemData.reorderQty !== undefined ? Number(itemData.reorderQty) : 0,
+        leadTimeDays: itemData.leadTimeDays !== undefined ? Number(itemData.leadTimeDays) : 0,
+        safetyFactor: itemData.safetyFactor !== undefined ? Number(itemData.safetyFactor) : 25,
+        safetyStock: itemData.safetyStock !== undefined ? Number(itemData.safetyStock) : 0,
+        barcode: itemData.barcode || '',
         standardRate: rate,
         currentQty: qty,
         reservedQty: 0,
@@ -380,11 +383,11 @@ export const App: React.FC = () => {
         averageRate: rate,
         lastPurchaseRate: rate,
         stockValue: qty * rate,
-        avgDailyConsumption: 2,
-        avgMonthlyConsumption: 60,
-        criticalItem: false,
-        consumable: true,
-        abcClass: 'B',
+        avgDailyConsumption: itemData.avgDailyConsumption !== undefined ? Number(itemData.avgDailyConsumption) : 0,
+        avgMonthlyConsumption: itemData.avgMonthlyConsumption !== undefined ? Number(itemData.avgMonthlyConsumption) : 0,
+        criticalItem: itemData.criticalItem || false,
+        consumable: itemData.consumable !== undefined ? itemData.consumable : true,
+        abcClass: itemData.abcClass || 'B',
         active: true,
         createdAt: now,
         updatedAt: now
@@ -425,6 +428,40 @@ export const App: React.FC = () => {
     setIsScannerOpen(false);
   };
 
+  const handleBulkImportSuccess = (payload: {
+    items: Item[];
+    newCategories: any[];
+    newUnits: any[];
+    newDepartments: any[];
+    ledgerEntries: StockLedgerEntry[];
+  }) => {
+    setState(prev => ({
+      ...prev,
+      items: [...payload.items, ...prev.items],
+      categories: [...prev.categories, ...payload.newCategories],
+      units: [...prev.units, ...payload.newUnits],
+      departments: [...prev.departments, ...payload.newDepartments],
+      ledger: [...payload.ledgerEntries, ...prev.ledger],
+      auditLogs: [
+        {
+          id: `aud-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          userId: prev.activeUser.id,
+          userName: prev.activeUser.name,
+          module: 'Item Master',
+          action: 'CREATE',
+          record: `BULK_UPLOAD_${payload.items.length}_ITEMS`,
+          previousValue: 'None',
+          newValue: `${payload.items.length} items imported`,
+          reason: 'Bulk CSV / Excel item master upload'
+        },
+        ...prev.auditLogs
+      ]
+    }));
+    setIsBulkUploadOpen(false);
+  };
+
   const renderActiveView = () => {
     switch (state.activeView) {
       case 'dashboard':
@@ -442,6 +479,7 @@ export const App: React.FC = () => {
             onEditItem={handleEditItem}
             onDeleteItem={handleDeleteItem}
             onOpenAddItem={handleCreateNewItem}
+            onOpenBulkUpload={() => setIsBulkUploadOpen(true)}
           />
         );
       case 'categories':
@@ -478,6 +516,8 @@ export const App: React.FC = () => {
         return <MonthlyClosingView state={state} setState={setState} />;
       case 'stock_ledger':
         return <StockLedgerView state={state} onReverse={handleReverseTransaction} />;
+      case 'dept_ledger':
+        return <DepartmentLedgerView state={state} onNavigateTab={handleActiveViewChange} />;
       case 'stock_valuation':
         return <StockValuationReportView state={state} />;
       case 'abc_analysis':
@@ -495,7 +535,7 @@ export const App: React.FC = () => {
       case 'plugin_architecture':
         return <PluginArchitectureView state={state} setState={setState} />;
       case 'system_settings':
-        return <SystemSettingsView state={state} setState={setState} />;
+        return <SystemSettingsView state={state} setState={setState} onOpenBulkUpload={() => setIsBulkUploadOpen(true)} />;
       default:
         return (
           <DashboardView
@@ -587,6 +627,14 @@ export const App: React.FC = () => {
         state={state}
         onSave={handleSaveItem}
         editingItem={selectedItemForEdit}
+        onOpenBulkUpload={() => setIsBulkUploadOpen(true)}
+      />
+
+      <BulkItemUploadModal
+        isOpen={isBulkUploadOpen}
+        onClose={() => setIsBulkUploadOpen(false)}
+        state={state}
+        onImportSuccess={handleBulkImportSuccess}
       />
 
       <ApiDocModal 

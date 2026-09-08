@@ -124,7 +124,7 @@ export const ReorderManagementView: React.FC<ReorderManagementViewProps> = ({ st
                     <tr key={item.id} className="hover:bg-slate-800/50">
                       <td className="p-3 font-mono font-bold text-emerald-400">{item.itemCode}</td>
                       <td className="p-3 font-semibold text-slate-100">{item.itemName}</td>
-                      <td className="p-3 text-slate-300">{item.preferredSupplierName || 'ABC Bearings'}</td>
+                      <td className="p-3 text-slate-300">{item.preferredSupplierName || '—'}</td>
                       <td className="p-3 text-right font-mono text-slate-300">{item.leadTimeDays}d</td>
                       <td className="p-3 text-right font-mono text-slate-300">{item.avgDailyConsumption}</td>
                       <td className="p-3 text-right font-mono text-amber-400">{item.safetyStock}</td>

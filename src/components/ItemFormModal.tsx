@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Package, Sliders, Shield, AlertTriangle } from 'lucide-react';
+import { X, Save, Package, Sliders, Shield, AlertTriangle, UploadCloud } from 'lucide-react';
 import { AppState } from '../services/store';
 import { Item } from '../types';
 import { calculateReorderLevel, calculateSafetyStock } from '../utils/calculations';
@@ -10,6 +10,7 @@ interface ItemFormModalProps {
   state: AppState;
   onSave: (item: Item) => void;
   editingItem: Item | null;
+  onOpenBulkUpload?: () => void;
 }
 
 export const ItemFormModal: React.FC<ItemFormModalProps> = ({
@@ -17,7 +18,8 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
   onClose,
   state,
   onSave,
-  editingItem
+  editingItem,
+  onOpenBulkUpload
 }) => {
   const [formData, setFormData] = useState<Partial<Item>>({
     itemCode: '',
@@ -37,20 +39,20 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
     partNumber: '',
     brand: '',
     specification: '',
-    rack: 'A01',
-    bin: 'B01',
-    minStock: 10,
-    maxStock: 100,
-    reorderLevel: 25,
-    reorderQty: 50,
+    rack: '',
+    bin: '',
+    minStock: 0,
+    maxStock: 0,
+    reorderLevel: 0,
+    reorderQty: 0,
     safetyFactor: 25,
-    safetyStock: 10,
-    leadTimeDays: 7,
-    avgDailyConsumption: 2,
-    avgMonthlyConsumption: 60,
-    standardRate: 100,
-    lastPurchaseRate: 100,
-    averageRate: 100,
+    safetyStock: 0,
+    leadTimeDays: 0,
+    avgDailyConsumption: 0,
+    avgMonthlyConsumption: 0,
+    standardRate: 0,
+    lastPurchaseRate: 0,
+    averageRate: 0,
     criticalItem: false,
     consumable: true,
     active: true,
@@ -84,20 +86,20 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
         partNumber: '',
         brand: '',
         specification: '',
-        rack: 'A01',
-        bin: 'B01',
-        minStock: 10,
-        maxStock: 100,
-        reorderLevel: 25,
-        reorderQty: 50,
+        rack: '',
+        bin: '',
+        minStock: 0,
+        maxStock: 0,
+        reorderLevel: 0,
+        reorderQty: 0,
         safetyFactor: 25,
-        safetyStock: 10,
-        leadTimeDays: 7,
-        avgDailyConsumption: 2,
-        avgMonthlyConsumption: 60,
-        standardRate: 100,
-        lastPurchaseRate: 100,
-        averageRate: 100,
+        safetyStock: 0,
+        leadTimeDays: 0,
+        avgDailyConsumption: 0,
+        avgMonthlyConsumption: 0,
+        standardRate: 0,
+        lastPurchaseRate: 0,
+        averageRate: 0,
         criticalItem: false,
         consumable: true,
         active: true,
@@ -246,6 +248,33 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+          {!editingItem && onOpenBulkUpload && (
+            <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
+                  <UploadCloud className="w-4 h-4" />
+                </div>
+                <div>
+                  <h5 className="text-xs font-bold text-slate-100">Need to add items in bulk?</h5>
+                  <p className="text-[11px] text-slate-400">
+                    Upload your entire catalog at once via standard CSV or copy-paste directly from Microsoft Excel.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenBulkUpload();
+                }}
+                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shrink-0 self-start sm:self-center shadow-sm"
+              >
+                <UploadCloud className="w-3.5 h-3.5" />
+                <span>Switch to Bulk Upload (CSV/Excel)</span>
+              </button>
+            </div>
+          )}
+
           {/* Section 1: Basic Classification */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-3 flex items-center gap-2">

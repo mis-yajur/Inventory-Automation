@@ -7,7 +7,34 @@ import {
 import { calculateWeightedAverageRate, getItemInventoryStatus } from '../utils/calculations';
 
 // Key for LocalStorage
-export const STORAGE_KEY = 'ims_automation_yajur_data_v1';
+export const STORAGE_KEY = 'ims_automation_yajur_live_v2';
+export const LEGACY_STORAGE_KEYS = ['ims_automation_yajur_data_v1', 'ims_automation_yajur_state'];
+
+export const DUMMY_ITEM_CODES = new Set([
+  'ITM-0001', 'ITM-0002', 'ITM-0003', 'ITM-0004', 'ITM-0005', 'ITM-0006',
+  'ITM-0007', 'ITM-0008', 'ITM-0009', 'ITM-0010', 'ITM-0011', 'ITM-0012'
+]);
+
+export const DUMMY_ITEM_NAMES = new Set([
+  'bearing 6205', 'lubricant abc', 'cotton waste', 'spare gearbox', 'fuse 63a',
+  'safety gloves', 'v-belt b72', 'cable tie 200mm', 'gland 25mm', 'seal 45mm',
+  'plc module x2', 'old motor coupling'
+]);
+
+export function isDummyItem(item: any): boolean {
+  if (!item) return false;
+  if (typeof item.id === 'string' && /^itm-(1[0-2]|[1-9])$/.test(item.id)) return true;
+  if (typeof item.itemCode === 'string' && DUMMY_ITEM_CODES.has(item.itemCode.toUpperCase().trim())) return true;
+  if (typeof item.itemName === 'string' && DUMMY_ITEM_NAMES.has(item.itemName.toLowerCase().trim())) return true;
+  return false;
+}
+
+export function isDummyLedgerEntry(entry: any): boolean {
+  if (!entry) return false;
+  if (typeof entry.id === 'string' && /^led-[1-6]$/.test(entry.id)) return true;
+  if (typeof entry.itemCode === 'string' && DUMMY_ITEM_CODES.has(entry.itemCode.toUpperCase().trim())) return true;
+  return false;
+}
 
 export interface AppState {
   items: Item[];
@@ -96,26 +123,54 @@ export const initialSettings: CompanySettings = {
 };
 
 export function loadInitialState(): AppState {
+  // Clear legacy storage keys
+  try {
+    LEGACY_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
+  } catch (e) {
+    // Ignore storage access errors
+  }
+
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
+      const rawItems = Array.isArray(parsed.items) ? parsed.items : initialItems;
+      const cleanItems = rawItems.filter((i: any) => !isDummyItem(i));
+
+      const rawLedger = Array.isArray(parsed.ledger) ? parsed.ledger : initialLedger;
+      const cleanLedger = rawLedger.filter((l: any) => !isDummyLedgerEntry(l));
+
+      const rawAlerts = Array.isArray(parsed.alerts) ? parsed.alerts : initialAlerts;
+      const cleanAlerts = rawAlerts.filter((a: any) => !a.id || !/^alt-[1-5]$/.test(a.id));
+
+      const rawAuditLogs = Array.isArray(parsed.auditLogs) ? parsed.auditLogs : initialAuditLogs;
+      const cleanAuditLogs = rawAuditLogs.filter((al: any) => !al.id || !/^aud-[1-4]$/.test(al.id));
+
+      const rawCategories = Array.isArray(parsed.categories) ? parsed.categories : initialCategories;
+      const cleanCategories = rawCategories.filter((c: any) => !c.id || !/^cat-[1-5]$/.test(c.id));
+
+      const rawDepartments = Array.isArray(parsed.departments) ? parsed.departments : initialDepartments;
+      const cleanDepartments = rawDepartments.filter((d: any) => !d.id || !/^dep-[1-5]$/.test(d.id));
+
+      const rawSuppliers = Array.isArray(parsed.suppliers) ? parsed.suppliers : initialSuppliers;
+      const cleanSuppliers = rawSuppliers.filter((s: any) => !s.id || !/^sup-[1-3]$/.test(s.id));
+
       return {
-        items: parsed.items || initialItems,
-        categories: parsed.categories || initialCategories,
+        items: cleanItems,
+        categories: cleanCategories,
         units: parsed.units || initialUnits,
-        departments: parsed.departments || initialDepartments,
+        departments: cleanDepartments,
         stores: parsed.stores || initialStores,
-        suppliers: parsed.suppliers || initialSuppliers,
-        ledger: parsed.ledger || initialLedger,
+        suppliers: cleanSuppliers,
+        ledger: cleanLedger,
         stockInReceipts: parsed.stockInReceipts || [],
         materialIssues: parsed.materialIssues || [],
         materialReturns: parsed.materialReturns || [],
         stockTransfers: parsed.stockTransfers || [],
         stockAdjustments: parsed.stockAdjustments || [],
         monthlyClosings: parsed.monthlyClosings || [],
-        alerts: parsed.alerts || initialAlerts,
-        auditLogs: parsed.auditLogs || initialAuditLogs,
+        alerts: cleanAlerts,
+        auditLogs: cleanAuditLogs,
         users: parsed.users || initialUsers,
         settings: parsed.settings || initialSettings,
         activeStoreId: parsed.activeStoreId || 'str-1',

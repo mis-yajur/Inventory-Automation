@@ -10,33 +10,23 @@ interface MaterialIssueViewProps {
 
 export const MaterialIssueView: React.FC<MaterialIssueViewProps> = ({ state, setState }) => {
   const [showNew, setShowNew] = useState(false);
-  const [storeId, setStoreId] = useState(state.stores[0]?.id || 'str-1');
-  const [departmentId, setDepartmentId] = useState(state.departments[0]?.id || 'dep-1');
-  const [requestedBy, setRequestedBy] = useState('R. Das');
-  const [issuedBy, setIssuedBy] = useState('M. Ghosh');
-  const [machineJob, setMachineJob] = useState('Line 2 Breakdown Repair');
+  const [storeId, setStoreId] = useState(state.stores[0]?.id || '');
+  const [departmentId, setDepartmentId] = useState(state.departments[0]?.id || '');
+  const [requestedBy, setRequestedBy] = useState('');
+  const [issuedBy, setIssuedBy] = useState(state.users[0]?.name || '');
+  const [machineJob, setMachineJob] = useState('');
   const [remarks, setRemarks] = useState('');
 
-  // Feature 8: High-Value Approval (Double-Signature) and Feature 4 (Gate Pass) States
+  // High-Value Approval and Gate Pass States
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinInput, setPinInput] = useState('');
-  const [coSignerName, setCoSignerName] = useState('P. K. Sen (Stores Mgr)');
+  const [coSignerName, setCoSignerName] = useState('');
   const [pinError, setPinError] = useState('');
   const [gatePassItem, setGatePassItem] = useState<any | null>(null);
   const [gatePassType, setGatePassType] = useState<'Returnable' | 'Non-Returnable'>('Returnable');
   const [gatePassPrinted, setGatePassPrinted] = useState(false);
 
-  const [issueItems, setIssueItems] = useState<MaterialIssueItem[]>([
-    {
-      itemId: state.items[0]?.id || '',
-      availableQty: state.items[0]?.availableQty || 0,
-      reqQty: 2,
-      issueQty: 2,
-      unit: state.items[0]?.unitName || 'PCS',
-      rate: state.items[0]?.averageRate || 100,
-      issueValue: 2 * (state.items[0]?.averageRate || 100)
-    }
-  ]);
+  const [issueItems, setIssueItems] = useState<MaterialIssueItem[]>([]);
 
   const [validationError, setValidationError] = useState('');
 

@@ -12,10 +12,10 @@ export const MaterialReturnView: React.FC<MaterialReturnViewProps> = ({ state, s
   const [showNew, setShowNew] = useState(false);
   const [itemId, setItemId] = useState(state.items[0]?.id || '');
   const [returnQty, setReturnQty] = useState(1);
-  const [departmentId, setDepartmentId] = useState(state.departments[0]?.id || 'dep-1');
-  const [originalIssueRef, setOriginalIssueRef] = useState('ISS-329');
+  const [departmentId, setDepartmentId] = useState(state.departments[0]?.id || '');
+  const [originalIssueRef, setOriginalIssueRef] = useState('');
   const [condition, setCondition] = useState<'Unused' | 'Partially Used' | 'Damaged' | 'Scrap'>('Unused');
-  const [remarks, setRemarks] = useState('Job completed with residual material');
+  const [remarks, setRemarks] = useState('');
 
   const handlePostReturn = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +23,7 @@ export const MaterialReturnView: React.FC<MaterialReturnViewProps> = ({ state, s
     const item = state.items.find(i => i.id === activeItemId);
     if (!item) return;
 
-    const returnNo = `MRN-2026-${String(state.materialReturns.length + 101).padStart(3, '0')}`;
+    const returnNo = `MRN-${new Date().getFullYear()}-${String(state.materialReturns.length + 1).padStart(4, '0')}`;
     const now = new Date().toISOString().split('T')[0];
     const deptObj = state.departments.find(d => d.id === departmentId);
 
@@ -37,7 +37,7 @@ export const MaterialReturnView: React.FC<MaterialReturnViewProps> = ({ state, s
       items: [
         {
           itemId: item.id,
-          issuedQty: returnQty + 5,
+          issuedQty: returnQty,
           returnQty: returnQty,
           condition,
           rate: item.averageRate,

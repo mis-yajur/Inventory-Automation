@@ -11,9 +11,9 @@ interface StockAdjustmentViewProps {
 export const StockAdjustmentView: React.FC<StockAdjustmentViewProps> = ({ state, setState }) => {
   const [showNew, setShowNew] = useState(false);
   const [itemId, setItemId] = useState(state.items[0]?.id || '');
-  const [physicalQty, setPhysicalQty] = useState(10);
+  const [physicalQty, setPhysicalQty] = useState(0);
   const [adjustmentType, setAdjustmentType] = useState<any>('Physical Verification Shortage');
-  const [reason, setReason] = useState('Stock count audit variance');
+  const [reason, setReason] = useState('');
 
   const activeItemId = itemId || state.items[0]?.id || '';
   const selectedItem = state.items.find(i => i.id === activeItemId);
@@ -24,7 +24,7 @@ export const StockAdjustmentView: React.FC<StockAdjustmentViewProps> = ({ state,
     e.preventDefault();
     if (!selectedItem) return;
 
-    const adjustmentNo = `ADJ-2026-${String(state.stockAdjustments.length + 19).padStart(3, '0')}`;
+    const adjustmentNo = `ADJ-${new Date().getFullYear()}-${String(state.stockAdjustments.length + 1).padStart(4, '0')}`;
     const now = new Date().toISOString().split('T')[0];
 
     const newAdj: StockAdjustment = {

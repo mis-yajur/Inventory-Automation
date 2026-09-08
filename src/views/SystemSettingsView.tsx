@@ -1,15 +1,19 @@
-import React from 'react';
-import { Settings, UploadCloud, Loader2, Trash2, RotateCcw } from 'lucide-react';
-import { AppState, initialCategories, initialDepartments, initialItems, initialLedger, initialUsers, initialUnits, initialStores, initialSuppliers, initialAlerts, initialAuditLogs, STORAGE_KEY } from '../services/store';
+import React, { useState } from 'react';
+import { Settings, UploadCloud, Loader2, Trash2, RotateCcw, ShieldAlert, Sparkles, FileSpreadsheet } from 'lucide-react';
+import { AppState, initialCategories, initialDepartments, initialUsers, initialUnits, initialStores, initialSuppliers, STORAGE_KEY } from '../services/store';
 import { useCsvParser } from '../hooks/useCsvParser';
+import { purgeLegacyDummyDataFromFirebase } from '../services/syncManager';
 
 interface SystemSettingsViewProps {
   state: AppState;
   setState: React.Dispatch<React.SetStateAction<AppState>>;
+  onOpenBulkUpload?: () => void;
 }
 
-export const SystemSettingsView: React.FC<SystemSettingsViewProps> = ({ state, setState }) => {
+export const SystemSettingsView: React.FC<SystemSettingsViewProps> = ({ state, setState, onOpenBulkUpload }) => {
   const { parseCsv, isParsing, error } = useCsvParser();
+  const [isPurging, setIsPurging] = useState(false);
+  const [purgeStatus, setPurgeStatus] = useState<string | null>(null);
 
   const handleFileSelect = (type: 'items' | 'units' | 'departments') => (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -26,35 +30,75 @@ export const SystemSettingsView: React.FC<SystemSettingsViewProps> = ({ state, s
     }
   };
 
+  const handlePurgeDummyData = async () => {
+    if (!window.confirm('This will purge all legacy dummy sample items (ITM-0001 to ITM-0012) and their test ledger entries permanently. Proceed?')) {
+      return;
+    }
+
+    setIsPurging(true);
+    setPurgeStatus('Purging dummy data from cloud & local storage...');
+    try {
+      await purgeLegacyDummyDataFromFirebase();
+      
+      setState(prev => ({
+        ...prev,
+        items: prev.items.filter(i => !/^itm-[1-9]|itm-1[0-2]$/.test(i.id)),
+        ledger: prev.ledger.filter(l => !/^led-[1-6]$/.test(l.id)),
+        alerts: prev.alerts.filter(a => !/^alt-[1-5]$/.test(a.id)),
+        auditLogs: prev.auditLogs.filter(al => !/^aud-[1-4]$/.test(al.id))
+      }));
+
+      setPurgeStatus('All dummy data successfully purged! System is 100% clean.');
+    } catch (err: any) {
+      setPurgeStatus(`Purge error: ${err.message || 'Unknown error'}`);
+    } finally {
+      setIsPurging(false);
+    }
+  };
+
   const handleFactoryReset = () => {
-    if (window.confirm('CRITICAL: This will delete ALL data including transactions and masters. This action cannot be undone. Proceed?')) {
+    if (window.confirm('CRITICAL: This will reset the system to a clean production state with ZERO dummy items and zero dummy transactions. Proceed?')) {
       const newState: AppState = {
         ...state,
-        items: initialItems,
+        items: [],
         categories: initialCategories,
         units: initialUnits,
         departments: initialDepartments,
         stores: initialStores,
         suppliers: initialSuppliers,
-        ledger: initialLedger,
+        ledger: [],
         stockInReceipts: [],
         materialIssues: [],
         materialReturns: [],
         stockTransfers: [],
         stockAdjustments: [],
         monthlyClosings: [],
-        alerts: initialAlerts,
-        auditLogs: initialAuditLogs,
+        alerts: [],
+        auditLogs: [
+          {
+            id: `aud-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            userId: state.activeUser.id,
+            userName: state.activeUser.name,
+            module: 'System Administration',
+            action: 'RESET',
+            record: 'ALL_DATA',
+            previousValue: 'Existing Data',
+            newValue: 'CLEAN_SLATE',
+            reason: 'System reset to clean production state'
+          }
+        ],
         users: initialUsers,
-        activeStoreId: 'str-1',
+        activeStoreId: state.stores[0]?.id || 'str-1',
         isOfflineMode: false,
         isFirebaseSynced: true
       };
       
       setState(newState);
       localStorage.removeItem(STORAGE_KEY);
-      alert('System has been reset to factory defaults.');
-      window.location.reload();
+      localStorage.removeItem('ims_automation_yajur_data_v1');
+      alert('System has been reset to a completely clean, zero-dummy production state.');
     }
   };
 
@@ -71,12 +115,34 @@ export const SystemSettingsView: React.FC<SystemSettingsViewProps> = ({ state, s
       </div>
 
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-6">
+        {/* Bulk Uploader Featured Card */}
+        {onOpenBulkUpload && (
+          <div className="bg-gradient-to-r from-emerald-950/60 to-slate-900 border border-emerald-500/30 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                <FileSpreadsheet className="w-5 h-5" />
+                <span>Standard Inventory Bulk Upload Tool</span>
+              </div>
+              <p className="text-xs text-slate-300 max-w-xl">
+                Upload your company inventory catalog in standard CSV format or copy-paste directly from Microsoft Excel. Automatically validates units, auto-creates missing categories, and posts opening stock entries.
+              </p>
+            </div>
+            <button
+              onClick={onOpenBulkUpload}
+              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-emerald-950 shrink-0 self-start sm:self-center"
+            >
+              <UploadCloud className="w-4 h-4" />
+              <span>Launch Bulk Uploader</span>
+            </button>
+          </div>
+        )}
+
         <section className="space-y-4">
           <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wider flex items-center gap-2">
             <UploadCloud className="w-4 h-4 text-emerald-400" />
-            Administrative Bulk Imports
+            Individual CSV Master Imports
           </h3>
-          <p className="text-xs text-slate-400 mb-4">Upload CSV files to securely batch-insert master records. The system will automatically parse and validate the schema headers.</p>
+          <p className="text-xs text-slate-400 mb-4">Upload individual CSV files to batch-insert records into specific master tables.</p>
           
           {error && <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs">{error}</div>}
           
@@ -107,17 +173,32 @@ export const SystemSettingsView: React.FC<SystemSettingsViewProps> = ({ state, s
         <section className="pt-6 border-t border-slate-800 space-y-4">
           <h3 className="text-sm font-bold text-rose-400 uppercase tracking-wider flex items-center gap-2">
             <Trash2 className="w-4 h-4" />
-            System Maintenance & Debugging
+            System Clean Slate & Maintenance
           </h3>
-          <p className="text-xs text-slate-400">Perform sensitive operations to clean up or reset the application state. Use these tools with extreme caution.</p>
+          <p className="text-xs text-slate-400">Manage dummy data cleanup and reset system state to a pristine live production condition.</p>
           
+          {purgeStatus && (
+            <div className="p-3 bg-emerald-950/50 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 font-semibold">
+              {purgeStatus}
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-4">
+            <button 
+              onClick={handlePurgeDummyData}
+              disabled={isPurging}
+              className="flex items-center gap-2 px-4 py-2.5 bg-amber-950/40 border border-amber-800/50 hover:bg-amber-900/40 text-amber-300 rounded-xl text-xs font-bold transition shadow-lg shadow-amber-950/20 disabled:opacity-50"
+            >
+              {isPurging ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              <span>Purge Legacy Dummy Data from Database</span>
+            </button>
+
             <button 
               onClick={handleFactoryReset}
               className="flex items-center gap-2 px-4 py-2.5 bg-rose-950/40 border border-rose-900/50 hover:bg-rose-900/40 text-rose-400 rounded-xl text-xs font-bold transition shadow-lg shadow-rose-950/20"
             >
               <RotateCcw className="w-4 h-4" />
-              Factory Reset System (Delete All Data)
+              <span>Reset to Clean Live State (Zero Dummy Items)</span>
             </button>
           </div>
         </section>

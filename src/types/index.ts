@@ -78,6 +78,7 @@ export type ViewType =
   | 'stock_planning'
   | 'monthly_closing'
   | 'stock_ledger'
+  | 'dept_ledger'
   | 'stock_valuation'
   | 'abc_analysis'
   | 'fast_slow_moving'
@@ -131,9 +132,12 @@ export interface Supplier {
   contactPerson: string;
   phone: string;
   email: string;
-  address: string;
+  address?: string;
   leadTimeDays: number;
-  preferred: boolean;
+  rating?: number;
+  paymentTerms?: string;
+  taxNumber?: string;
+  preferred?: boolean;
   active: boolean;
 }
 

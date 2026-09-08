@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Package, Plus, Search, Filter, Download, Scan, SlidersHorizontal,
   Edit2, Shield, AlertTriangle, Layers, Grid, List, HelpCircle,
-  Trash2
+  Trash2, UploadCloud, FileSpreadsheet
 } from 'lucide-react';
 import { AppState } from '../services/store';
 import { Item } from '../types';
@@ -13,13 +13,15 @@ interface ItemMasterViewProps {
   onOpenAddItem: () => void;
   onEditItem: (item: Item) => void;
   onDeleteItem: (itemId: string) => void;
+  onOpenBulkUpload?: () => void;
 }
 
 export const ItemMasterView: React.FC<ItemMasterViewProps> = ({
   state,
   onOpenAddItem,
   onEditItem,
-  onDeleteItem
+  onDeleteItem,
+  onOpenBulkUpload
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
@@ -85,6 +87,16 @@ export const ItemMasterView: React.FC<ItemMasterViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {onOpenBulkUpload && (
+            <button
+              onClick={onOpenBulkUpload}
+              className="px-3.5 py-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+              title="Upload inventory catalog using standard CSV format or Excel copy-paste"
+            >
+              <UploadCloud className="w-4 h-4" />
+              <span>Bulk Upload (CSV / Excel)</span>
+            </button>
+          )}
           <button
             onClick={handleExportCSV}
             className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-700"
@@ -188,43 +200,68 @@ export const ItemMasterView: React.FC<ItemMasterViewProps> = ({
               <tbody className="divide-y divide-slate-800/60">
                 {filteredItems.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="p-8 text-center text-slate-500 text-xs">
-                      No matching items found in directory.
+                    <td colSpan={10} className="p-12 text-center">
+                      <div className="max-w-md mx-auto space-y-3">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-800/80 border border-slate-700 text-slate-400 flex items-center justify-center mx-auto">
+                          <Package className="w-6 h-6" />
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-200">
+                          {state.items.length === 0 ? 'Item Master Catalog is Clean & Live' : 'No matching items found'}
+                        </h4>
+                        <p className="text-xs text-slate-400">
+                          {state.items.length === 0
+                            ? 'Your inventory database is clean and ready for real production items. Use Bulk Upload to import all items at once or create items manually.'
+                            : 'Try adjusting your search criteria or category filter.'}
+                        </p>
+                        {state.items.length === 0 && (
+                          <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+                            {onOpenBulkUpload && (
+                              <button
+                                onClick={onOpenBulkUpload}
+                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-950"
+                              >
+                                <UploadCloud className="w-4 h-4" />
+                                <span>Bulk Upload Items (CSV/Excel)</span>
+                              </button>
+                            )}
+                            <button
+                              onClick={onOpenAddItem}
+                              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-700"
+                            >
+                              <Plus className="w-4 h-4 text-emerald-400" />
+                              <span>Create First Item</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ) : (
                   filteredItems.map(item => {
                     const status = getItemInventoryStatus(item);
-                    // Feature 4: Simulated Item Aging calculation (Dead Stock)
-                    const isDeadStock = item.availableQty > 0 && item.stockValue > 15000 && item.itemCode.includes('2');
-                    const ageDays = isDeadStock ? '185d Idle' : 'Active';
-
-                    // Feature 6: Approved Manufacturer List (AML)
-                    const manufacturer = item.brand || 'Approved Standard Vendor';
+                    const isDeadStock = status === 'Non-moving' || status === 'Dead Stock';
 
                     return (
                       <tr key={item.id} className="hover:bg-slate-800/50 transition group">
                         <td className="p-3 font-mono font-bold text-emerald-400">{item.itemCode}</td>
                         <td className="p-3">
                           <div className="font-bold text-slate-100">{item.itemName}</div>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-[10px] px-1.5 py-0.2 bg-slate-800 text-slate-400 rounded border border-slate-700 font-semibold">
-                              AML: {manufacturer}
-                            </span>
-                            {/* Feature 9: Dual-UOM Advisory Formula */}
-                            <span className="text-[9px] text-emerald-500 font-mono">
-                              (1 Box = 10 {item.unitName}s)
-                            </span>
-                          </div>
+                          {item.brand && (
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-[10px] px-1.5 py-0.2 bg-slate-800 text-slate-400 rounded border border-slate-700 font-semibold">
+                                Brand: {item.brand}
+                              </span>
+                            </div>
+                          )}
                         </td>
                         <td className="p-3 text-slate-300">{item.categoryName}</td>
                         <td className="p-3 font-mono text-slate-400 text-[11px]">
-                          Rack {item.rack || 'A01'} - Bin {item.bin || 'B01'}
+                          {item.rack ? `Rack ${item.rack}${item.bin ? ` - Bin ${item.bin}` : ''}` : '—'}
                         </td>
                         <td className="p-3 text-right font-mono font-extrabold text-slate-100">
                           {item.availableQty} <span className="text-[10px] text-slate-400 font-normal">{item.unitName}</span>
                         </td>
-                        <td className="p-3 text-right font-mono text-slate-300">₹{item.averageRate}</td>
+                        <td className="p-3 text-right font-mono text-slate-300">₹{item.averageRate.toLocaleString('en-IN')}</td>
                         <td className="p-3 text-right font-mono font-bold text-emerald-400">
                           {formatCurrency(item.stockValue)}
                         </td>
@@ -241,12 +278,10 @@ export const ItemMasterView: React.FC<ItemMasterViewProps> = ({
                             }`}>
                               {status}
                             </span>
-                            {isDeadStock ? (
+                            {isDeadStock && (
                               <span className="px-1.5 py-0.2 rounded bg-amber-950/40 text-amber-400 border border-amber-900 text-[9px] font-mono font-semibold">
-                                {ageDays}
+                                Idle
                               </span>
-                            ) : (
-                              <span className="text-[9px] text-slate-500">Fast Mover</span>
                             )}
                           </div>
                         </td>
@@ -314,7 +349,7 @@ export const ItemMasterView: React.FC<ItemMasterViewProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
-                  <span>Rack: <strong className="text-slate-200">{item.rack || 'A01'}</strong></span>
+                  <span>Rack: <strong className="text-slate-200">{item.rack || '—'}</strong></span>
                   <span>Reorder: <strong className="text-rose-400">{item.reorderLevel} {item.unitName}</strong></span>
                 </div>
 

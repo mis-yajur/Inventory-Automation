@@ -10,10 +10,10 @@ interface StockTransferViewProps {
 
 export const StockTransferView: React.FC<StockTransferViewProps> = ({ state, setState }) => {
   const [showNew, setShowNew] = useState(false);
-  const [fromStoreId, setFromStoreId] = useState(state.stores[0]?.id || 'str-1');
-  const [toStoreId, setToStoreId] = useState(state.stores[1]?.id || 'str-2');
+  const [fromStoreId, setFromStoreId] = useState(state.stores[0]?.id || '');
+  const [toStoreId, setToStoreId] = useState(state.stores[1]?.id || state.stores[0]?.id || '');
   const [itemId, setItemId] = useState(state.items[0]?.id || '');
-  const [transferQty, setTransferQty] = useState(5);
+  const [transferQty, setTransferQty] = useState(1);
 
   const handlePostTransfer = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +23,7 @@ export const StockTransferView: React.FC<StockTransferViewProps> = ({ state, set
     const item = state.items.find(i => i.id === activeItemId);
     if (!item) return;
 
-    const transferNo = `TRF-2026-${String(state.stockTransfers.length + 44).padStart(3, '0')}`;
+    const transferNo = `TRF-${new Date().getFullYear()}-${String(state.stockTransfers.length + 1).padStart(4, '0')}`;
     const now = new Date().toISOString().split('T')[0];
     const fromStore = state.stores.find(s => s.id === fromStoreId);
     const toStore = state.stores.find(s => s.id === toStoreId);
