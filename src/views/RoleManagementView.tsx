@@ -12,8 +12,8 @@ export const RoleManagementView: React.FC<RoleManagementViewProps> = ({ state, s
   const [showAddUser, setShowAddUser] = useState(false);
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
-  const [userRole, setUserRole] = useState<UserRole>('STORE_INCHARGE');
-  const [userDept, setUserDept] = useState(state.departments[0]?.id || 'dep-1');
+  const [userRole, setUserRole] = useState<UserRole['role']>('Store Incharge');
+  const [userDept, setUserDept] = useState(state.departments[0]?.id || '');
 
   const handleSwitchUser = (userId: string) => {
     const target = state.users.find(u => u.id === userId);
@@ -33,13 +33,14 @@ export const RoleManagementView: React.FC<RoleManagementViewProps> = ({ state, s
     e.preventDefault();
     if (!userName || !userEmail) return;
 
-    const newUser = {
+    const newUser: UserRole = {
       id: `usr-${Date.now()}`,
       name: userName,
       email: userEmail,
       role: userRole,
-      departmentId: userDept,
-      active: true
+      assignedStoreId: 'All Stores',
+      status: 'Active',
+      lastLogin: 'Never'
     };
 
     setState(prev => {
@@ -79,7 +80,7 @@ export const RoleManagementView: React.FC<RoleManagementViewProps> = ({ state, s
       {showAddUser && (
         <form onSubmit={handleCreateUser} className="p-5 bg-slate-900 border border-slate-700 rounded-2xl space-y-4">
           <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Create New User Account</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <input
               type="text"
               required
@@ -98,22 +99,16 @@ export const RoleManagementView: React.FC<RoleManagementViewProps> = ({ state, s
             />
             <select
               value={userRole}
-              onChange={e => setUserRole(e.target.value as UserRole)}
+              onChange={e => setUserRole(e.target.value as UserRole['role'])}
               className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 font-bold"
             >
-              <option value="PLANT_MANAGER">Plant Manager (Full Access)</option>
-              <option value="STORE_INCHARGE">Store Incharge (GRN, MIN, Transfers)</option>
-              <option value="MAINTENANCE_ENGINEER">Maintenance Engineer (Issue Requests)</option>
-              <option value="FINANCE_AUDITOR">Finance Auditor (Read-only Reports)</option>
-            </select>
-            <select
-              value={userDept}
-              onChange={e => setUserDept(e.target.value)}
-              className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100"
-            >
-              {state.departments.map(d => (
-                <option key={d.id} value={d.id}>{d.name}</option>
-              ))}
+              <option value="Super Admin">Super Admin (Full Access)</option>
+              <option value="Admin">Admin (Full Access)</option>
+              <option value="Store Manager">Store Manager (Store Ops)</option>
+              <option value="Store Incharge">Store Incharge (GRN, MIN, Transfers)</option>
+              <option value="Maintenance Engineer">Maintenance Engineer (Issue Requests)</option>
+              <option value="Finance Auditor">Finance Auditor (Read-only Reports)</option>
+              <option value="Viewer">Viewer (Read-only)</option>
             </select>
           </div>
           <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
@@ -138,9 +133,9 @@ export const RoleManagementView: React.FC<RoleManagementViewProps> = ({ state, s
             >
               <div className="flex items-center justify-between">
                 <span className={`px-2 py-0.5 rounded text-[10px] font-black border ${
-                  user.role === 'PLANT_MANAGER' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
-                  user.role === 'STORE_INCHARGE' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-                  user.role === 'MAINTENANCE_ENGINEER' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' :
+                  user.role === 'Super Admin' || user.role === 'Admin' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
+                  user.role === 'Store Manager' || user.role === 'Store Incharge' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                  user.role === 'Maintenance Engineer' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' :
                   'bg-amber-500/20 text-amber-400 border-amber-500/30'
                 }`}>
                   {user.role}

@@ -329,7 +329,7 @@ export interface UserRole {
   id: string;
   name: string;
   email: string;
-  role: 'Super Admin' | 'Admin' | 'Store Manager' | 'Store User' | 'Department User' | 'Viewer';
+  role: 'Super Admin' | 'Admin' | 'Store Manager' | 'Store Incharge' | 'Maintenance Engineer' | 'Finance Auditor' | 'Viewer';
   assignedStoreId: string; // 'All Stores' or store ID
   status: 'Active' | 'Inactive';
   lastLogin: string;
