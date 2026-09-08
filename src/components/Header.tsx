@@ -199,11 +199,11 @@ export const Header: React.FC<HeaderProps> = ({
         {/* User Badge */}
         <div className="flex items-center gap-2 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
           <div className="w-6 h-6 rounded-full bg-emerald-600 text-white text-[11px] font-bold flex items-center justify-center shrink-0 shadow-sm">
-            {state.activeUser.name.charAt(0)}
+            {state.activeUser?.name?.charAt(0) || 'S'}
           </div>
           <div className="hidden sm:block text-left">
-            <div className="text-xs font-bold text-slate-100 leading-tight">{state.activeUser.name}</div>
-            <div className="text-[10px] text-emerald-600 leading-none font-semibold">{state.activeUser.role}</div>
+            <div className="text-xs font-bold text-slate-100 leading-tight">{state.activeUser?.name || 'Super Admin'}</div>
+            <div className="text-[10px] text-emerald-600 leading-none font-semibold">{state.activeUser?.role || 'Super Admin'}</div>
           </div>
         </div>
       </div>

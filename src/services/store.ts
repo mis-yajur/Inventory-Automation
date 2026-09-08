@@ -864,6 +864,7 @@ export function loadInitialState(): AppState {
       const parsed = JSON.parse(saved);
       return {
         ...parsed,
+        activeUser: parsed.activeUser || initialUsers[0],
         isOfflineMode: false,
         isFirebaseSynced: true
       };
@@ -917,7 +918,8 @@ export function saveStateToStorage(state: AppState): void {
       auditLogs: state.auditLogs,
       users: state.users,
       settings: state.settings,
-      activeStoreId: state.activeStoreId
+      activeStoreId: state.activeStoreId,
+      activeUser: state.activeUser
     }));
   } catch (err) {
     console.error('Failed to save state to localStorage:', err);

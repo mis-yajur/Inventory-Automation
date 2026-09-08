@@ -343,7 +343,7 @@ export const App: React.FC = () => {
         <Sidebar
           activeView={state.activeView}
           onViewChange={handleActiveViewChange}
-          userRole={state.activeUser.role}
+          userRole={state.activeUser?.role || 'Super Admin'}
         />
 
         {/* View Workspace Content Area */}
