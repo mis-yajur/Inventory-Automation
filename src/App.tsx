@@ -540,51 +540,59 @@ export const App: React.FC = () => {
       </div>
 
       {/* Global Modals */}
-      {isSearchOpen && (
-        <GlobalSearchModal
-          items={state.items}
-          onSelectItem={(item) => {
-            setSelectedItemForView(item);
-            setIsSearchOpen(false);
-          }}
-          onClose={() => setIsSearchOpen(false)}
-        />
-      )}
+      <GlobalSearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        state={state}
+        onSelectItem={(item) => {
+          setSelectedItemForView(item);
+          setIsSearchOpen(false);
+        }}
+        onNavigateTab={handleActiveViewChange}
+      />
 
-      {isScannerOpen && (
-        <BarcodeScannerModal
-          onScanResult={handleBarcodeScanResult}
-          onClose={() => setIsScannerOpen(false)}
-        />
-      )}
+      <BarcodeScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        state={state}
+        onSelectItem={(item) => {
+          setSelectedItemForView(item);
+          setIsScannerOpen(false);
+        }}
+      />
 
-      {selectedItemForView && (
-        <ItemDetailModal
-          item={selectedItemForView}
-          ledger={state.ledger.filter(l => l.itemId === selectedItemForView.id)}
-          onClose={() => setSelectedItemForView(null)}
-          onEdit={(item) => {
-            setSelectedItemForView(null);
-            handleEditItem(item);
-          }}
-        />
-      )}
+      <ItemDetailModal
+        isOpen={!!selectedItemForView}
+        item={selectedItemForView}
+        onClose={() => setSelectedItemForView(null)}
+        state={state}
+        onEdit={(item) => {
+          setSelectedItemForView(null);
+          handleEditItem(item);
+        }}
+        onStockIn={(item) => {
+          setSelectedItemForView(null);
+          handleActiveViewChange('stock_in');
+          // In a real app, we'd pass the item to the StockIn view via state
+        }}
+        onIssue={(item) => {
+          setSelectedItemForView(null);
+          handleActiveViewChange('material_issue');
+        }}
+      />
 
-      {isItemFormOpen && (
-        <ItemFormModal
-          item={selectedItemForEdit}
-          categories={state.categories}
-          units={state.units}
-          stores={state.stores}
-          suppliers={state.suppliers}
-          onSave={handleSaveItem}
-          onClose={() => setIsItemFormOpen(false)}
-        />
-      )}
+      <ItemFormModal
+        isOpen={isItemFormOpen}
+        onClose={() => setIsItemFormOpen(false)}
+        state={state}
+        onSave={handleSaveItem}
+        editingItem={selectedItemForEdit}
+      />
 
-      {isApiDocOpen && (
-        <ApiDocModal onClose={() => setIsApiDocOpen(false)} />
-      )}
+      <ApiDocModal 
+        isOpen={isApiDocOpen}
+        onClose={() => setIsApiDocOpen(false)} 
+      />
     </div>
   );
 };

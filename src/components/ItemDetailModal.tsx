@@ -108,13 +108,6 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
               Edit Master
             </button>
             <button
-              onClick={() => window.print()}
-              className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-emerald-400 rounded-lg border border-slate-700 transition"
-              title="Print Item Label"
-            >
-              <Printer className="w-4 h-4" />
-            </button>
-            <button
               onClick={onClose}
               aria-label="Close detail modal"
               className="p-1 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-200 transition"
