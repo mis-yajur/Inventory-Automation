@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
   Search, Scan, Bell, Building2, HelpCircle,
-  AlertTriangle, CheckCircle2, Keyboard
+  AlertTriangle, CheckCircle2, Keyboard, LogOut
 } from 'lucide-react';
 import { AppState } from '../services/store';
+import { auth } from '../services/firebase';
+import { signOut } from 'firebase/auth';
 
 interface HeaderProps {
   state: AppState;
@@ -214,10 +216,17 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="w-6 h-6 rounded-full bg-emerald-600 text-white text-[11px] font-bold flex items-center justify-center shrink-0 shadow-sm">
             {state.activeUser?.name?.charAt(0) || 'S'}
           </div>
-          <div className="hidden sm:block text-left">
+          <div className="hidden sm:block text-left mr-2">
             <div className="text-xs font-bold text-slate-100 leading-tight">{state.activeUser?.name || 'Super Admin'}</div>
             <div className="text-[10px] text-emerald-600 leading-none font-semibold">{state.activeUser?.role || 'Super Admin'}</div>
           </div>
+          <button
+            onClick={() => signOut(auth)}
+            className="p-1 hover:bg-slate-800 rounded-md text-slate-400 hover:text-rose-400 transition"
+            title="Sign Out"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
       </div>
 

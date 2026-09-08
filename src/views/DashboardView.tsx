@@ -7,7 +7,7 @@ import {
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, AreaChart, Area
 } from 'recharts';
-import { AppState } from '../services/store';
+import { AppState, getMonthlyStock } from '../services/store';
 import { Item } from '../types';
 import { formatCurrency, getItemInventoryStatus } from '../utils/calculations';
 
@@ -186,7 +186,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <button
-            onClick={() => onNavigateTab('reorder')}
+            onClick={() => onNavigateTab('reorder_management')}
             className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-lg shadow-rose-950"
           >
             <span>Review Reorder List</span>
@@ -197,7 +197,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl">
+        <div 
+          onClick={() => onNavigateTab('current_stock')}
+          className="p-4 bg-slate-900 border border-slate-800 rounded-2xl cursor-pointer hover:bg-slate-800/80 transition-colors"
+        >
           <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
             <span>Total Stock Value</span>
             <DollarSign className="w-4 h-4 text-emerald-400" />
@@ -208,7 +211,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="text-[10px] text-slate-400 mt-1">{totalItems} Master SKUs</div>
         </div>
 
-        <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl">
+        <div 
+          onClick={() => onNavigateTab('reorder_management')}
+          className="p-4 bg-slate-900 border border-slate-800 rounded-2xl cursor-pointer hover:bg-slate-800/80 transition-colors"
+        >
           <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
             <span>Critical Items</span>
             <AlertTriangle className="w-4 h-4 text-rose-400" />
@@ -219,7 +225,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="text-[10px] text-slate-400 mt-1">Below Safety Stock</div>
         </div>
 
-        <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl">
+        <div 
+          onClick={() => onNavigateTab('reorder_management')}
+          className="p-4 bg-slate-900 border border-slate-800 rounded-2xl cursor-pointer hover:bg-slate-800/80 transition-colors"
+        >
           <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
             <span>Low Stock</span>
             <Layers className="w-4 h-4 text-amber-400" />
@@ -230,7 +239,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="text-[10px] text-slate-400 mt-1">Reorder Level Hit</div>
         </div>
 
-        <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl">
+        <div 
+          onClick={() => onNavigateTab('current_stock')}
+          className="p-4 bg-slate-900 border border-slate-800 rounded-2xl cursor-pointer hover:bg-slate-800/80 transition-colors"
+        >
           <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
             <span>Out of Stock</span>
             <Package className="w-4 h-4 text-rose-500" />
@@ -241,7 +253,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="text-[10px] text-slate-400 mt-1">Zero Available Qty</div>
         </div>
 
-        <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl">
+        <div 
+          onClick={() => onNavigateTab('current_stock')}
+          className="p-4 bg-slate-900 border border-slate-800 rounded-2xl cursor-pointer hover:bg-slate-800/80 transition-colors"
+        >
           <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
             <span>Overstock Value</span>
             <TrendingUp className="w-4 h-4 text-purple-400" />
@@ -252,7 +267,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="text-[10px] text-slate-400 mt-1">Exceeds Max Level</div>
         </div>
 
-        <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl">
+        <div 
+          onClick={() => onNavigateTab('fast_slow_moving')}
+          className="p-4 bg-slate-900 border border-slate-800 rounded-2xl cursor-pointer hover:bg-slate-800/80 transition-colors"
+        >
           <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
             <span>Non-Moving Capital</span>
             <Clock className="w-4 h-4 text-slate-400" />
@@ -267,14 +285,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Analytics Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Category Stock Valuation Bar Chart */}
-        <div className="lg:col-span-2 p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
+        <div 
+          onClick={() => onNavigateTab('abc_analysis')}
+          className="lg:col-span-2 p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4 cursor-pointer hover:bg-slate-800/80 transition-colors"
+        >
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold text-slate-100">Stock Valuation Distribution by Category</h3>
               <p className="text-[11px] text-slate-400">Total capital invested across warehouse categories</p>
             </div>
             <button
-              onClick={() => onNavigateTab('inventory-analysis')}
+              onClick={(e) => { e.stopPropagation(); onNavigateTab('abc_analysis'); }}
               className="text-xs text-emerald-400 font-semibold hover:underline"
             >
               ABC Analysis →
@@ -361,7 +382,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Monthly Stock & Consumption Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Month-Wise Consumption Trend */}
-        <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
+        <div 
+          onClick={() => onNavigateTab('consumption')}
+          className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4 cursor-pointer hover:bg-slate-800/80 transition-colors"
+        >
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold text-slate-100 flex items-center gap-1.5">
@@ -395,7 +419,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Month-Wise Stock Levels */}
-        <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
+        <div 
+          onClick={() => onNavigateTab('monthly_closing')}
+          className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4 cursor-pointer hover:bg-slate-800/80 transition-colors"
+        >
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold text-slate-100 flex items-center gap-1.5">
@@ -431,7 +458,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <h3 className="text-sm font-bold text-slate-100">Critical & Low Stock Items Needing Immediate Action</h3>
           </div>
           <button
-            onClick={() => onNavigateTab('reorder')}
+            onClick={() => onNavigateTab('reorder_management')}
             className="text-xs text-emerald-400 font-semibold hover:underline"
           >
             Open Full Reorder Planner →
@@ -506,6 +533,38 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </table>
         </div>
       </div>
+
+      {/* Month Wise Stock Summary Table */}
+      <div className="mt-6 p-5 bg-slate-900 border border-slate-800 rounded-2xl">
+        <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wider mb-4">Month Wise Stock Valuation</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-800 text-xs text-slate-400">
+                <th className="py-2 px-3 font-semibold">Month</th>
+                <th className="py-2 px-3 font-semibold text-right">Total Quantity</th>
+                <th className="py-2 px-3 font-semibold text-right">Closing Value</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800 text-sm">
+              {getMonthlyStock(state).length > 0 ? (
+                getMonthlyStock(state).map(row => (
+                  <tr key={row.month} className="hover:bg-slate-850/50 transition">
+                    <td className="py-2 px-3 font-semibold text-slate-200">{row.month}</td>
+                    <td className="py-2 px-3 text-right font-mono text-cyan-400">{row.totalQty.toFixed(2)}</td>
+                    <td className="py-2 px-3 text-right font-mono text-emerald-400 font-bold">{formatCurrency(row.totalValue)}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={3} className="py-4 text-center text-xs text-slate-500">No monthly ledger history available</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };
+

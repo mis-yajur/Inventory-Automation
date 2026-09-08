@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'firebase/auth';
 import {
   getFirestore,
   collection,
@@ -18,6 +19,7 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Firestore with custom databaseId using getFirestore
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
+export const auth = getAuth(app);
 
 export const COLLECTIONS = {
   items: 'items',

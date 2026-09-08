@@ -16,6 +16,7 @@ export const UnitsView: React.FC<UnitsViewProps> = ({ state, setState }) => {
   const [decimalAllowed, setDecimalAllowed] = useState(false);
   const [bulkText, setBulkText] = useState('');
   const [dragActive, setDragActive] = useState(false);
+  const { parseCsv, isParsing, error } = useCsvParser();
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -212,6 +213,7 @@ export const UnitsView: React.FC<UnitsViewProps> = ({ state, setState }) => {
                   {/* Drag-and-drop container */}
                   <div className="flex flex-col">
                     <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Drag & Drop CSV/TXT File</span>
+{error && <div className="text-rose-500 text-xs mb-2">{error}</div>}
                     <div
                       onDragEnter={handleDrag}
                       onDragOver={handleDrag}
@@ -225,7 +227,7 @@ export const UnitsView: React.FC<UnitsViewProps> = ({ state, setState }) => {
                         onChange={handleFileSelect}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       />
-                      <UploadCloud className={`w-8 h-8 mb-2 ${dragActive ? 'text-emerald-400 animate-bounce' : 'text-slate-500'}`} />
+                      {isParsing ? <Loader2 className="w-8 h-8 mb-2 text-emerald-400 animate-spin" /> : <UploadCloud className={`w-8 h-8 mb-2 ${dragActive ? 'text-emerald-400 animate-bounce' : 'text-slate-500'}`} />}
                       <span className="text-xs font-bold text-slate-300">Drag file here or click to browse</span>
                       <span className="text-[10px] text-slate-500 mt-1">Supports standard CSV or plain text files</span>
                     </div>

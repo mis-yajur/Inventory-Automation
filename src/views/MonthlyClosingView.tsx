@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Lock, CheckCircle2 } from 'lucide-react';
+import { Calendar, Lock, CheckCircle2, ChevronDown, ChevronRight, FileText } from 'lucide-react';
 import { AppState, saveStateToStorage } from '../services/store';
 
 interface MonthlyClosingViewProps {
@@ -10,9 +10,42 @@ interface MonthlyClosingViewProps {
 export const MonthlyClosingView: React.FC<MonthlyClosingViewProps> = ({ state, setState }) => {
   const [closingMonth, setClosingMonth] = useState('2026-08');
   const [closedSuccess, setClosedSuccess] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const handleRunMonthlyClosing = () => {
-    const totalVal = state.items.reduce((s, i) => s + i.stockValue, 0);
+    // Generate detailed month-wise In and Out
+    const itemsDetail = state.items.map(item => {
+      // Find all ledger entries for this item in this month
+      const monthEntries = state.ledger.filter(l => l.itemId === item.id && l.transactionDate.startsWith(closingMonth));
+      
+      const inwardQty = monthEntries.reduce((sum, e) => sum + e.inwardQty, 0);
+      const outwardQty = monthEntries.reduce((sum, e) => sum + e.outwardQty, 0);
+      
+      // Calculate adjustment separately
+      const adjustQty = monthEntries
+        .filter(e => e.transactionType === 'ADJUSTMENT_PLUS' || e.transactionType === 'ADJUSTMENT_MINUS')
+        .reduce((sum, e) => sum + e.inwardQty - e.outwardQty, 0);
+
+      // Estimate opening based on current minus net change this month (assuming closing = current for now)
+      const closingQty = item.currentQty;
+      const netChange = inwardQty - outwardQty;
+      const openingQty = closingQty - netChange;
+      
+      return {
+        itemId: item.id,
+        itemCode: item.itemCode,
+        itemName: item.itemName,
+        openingQty,
+        inwardQty,
+        outwardQty,
+        adjustQty,
+        closingQty,
+        closingRate: item.averageRate,
+        closingValue: item.stockValue
+      };
+    });
+
+    const totalVal = itemsDetail.reduce((s, i) => s + i.closingValue, 0);
 
     const newClosing: import('../types').MonthlyClosing = {
       id: `cls-${Date.now()}`,
@@ -24,7 +57,7 @@ export const MonthlyClosingView: React.FC<MonthlyClosingViewProps> = ({ state, s
       status: 'Closed',
       closedBy: state.activeUser.name,
       closedAt: new Date().toISOString().split('T')[0],
-      items: []
+      items: itemsDetail
     };
 
     setState(prev => {
@@ -39,7 +72,7 @@ export const MonthlyClosingView: React.FC<MonthlyClosingViewProps> = ({ state, s
             userId: prev.activeUser.id,
             userName: prev.activeUser.name,
             module: 'Monthly Closing',
-            action: 'MONTHLY_CLOSE',
+            action: 'MONTHLY_CLOSE' as const,
             record: closingMonth,
             previousValue: 'Open Period',
             newValue: 'Closed & Locked',
@@ -54,6 +87,11 @@ export const MonthlyClosingView: React.FC<MonthlyClosingViewProps> = ({ state, s
 
     setClosedSuccess(true);
     setTimeout(() => setClosedSuccess(false), 4000);
+  };
+
+  const toggleExpand = (id: string) => {
+    if (expandedId === id) setExpandedId(null);
+    else setExpandedId(id);
   };
 
   return (
@@ -101,6 +139,7 @@ export const MonthlyClosingView: React.FC<MonthlyClosingViewProps> = ({ state, s
         <table className="w-full text-left text-xs text-slate-300">
           <thead className="bg-slate-950 uppercase text-[10px] font-bold text-slate-400">
             <tr>
+              <th className="p-3 w-10"></th>
               <th className="p-3">Period</th>
               <th className="p-3">Store</th>
               <th className="p-3">Closed Date</th>
@@ -111,19 +150,81 @@ export const MonthlyClosingView: React.FC<MonthlyClosingViewProps> = ({ state, s
           </thead>
           <tbody className="divide-y divide-slate-800/60">
             {state.monthlyClosings.map(mc => (
-              <tr key={mc.id}>
-                <td className="p-3 font-mono font-bold text-emerald-400">{mc.monthYear}</td>
-                <td className="p-3 font-semibold text-slate-200">{mc.storeName}</td>
-                <td className="p-3 font-mono text-slate-400">{mc.closedAt}</td>
-                <td className="p-3 text-right font-mono font-bold text-emerald-400">₹{mc.closingValue.toLocaleString('en-IN')}</td>
-                <td className="p-3 text-slate-300">{mc.closedBy}</td>
-                <td className="p-3 text-center">
-                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-bold text-[10px] border border-slate-700">
-                    {mc.status}
-                  </span>
-                </td>
-              </tr>
+              <React.Fragment key={mc.id}>
+                <tr className="hover:bg-slate-800/30 transition-colors cursor-pointer" onClick={() => toggleExpand(mc.id)}>
+                  <td className="p-3 text-center">
+                    {expandedId === mc.id ? <ChevronDown className="w-4 h-4 mx-auto" /> : <ChevronRight className="w-4 h-4 mx-auto" />}
+                  </td>
+                  <td className="p-3 font-mono font-bold text-emerald-400">{mc.monthYear}</td>
+                  <td className="p-3 font-semibold text-slate-200">{mc.storeName}</td>
+                  <td className="p-3 font-mono text-slate-400">{mc.closedAt}</td>
+                  <td className="p-3 text-right font-mono font-bold text-emerald-400">₹{mc.closingValue.toLocaleString('en-IN')}</td>
+                  <td className="p-3 text-slate-300">{mc.closedBy}</td>
+                  <td className="p-3 text-center">
+                    <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-bold text-[10px] border border-slate-700">
+                      {mc.status}
+                    </span>
+                  </td>
+                </tr>
+                {expandedId === mc.id && (
+                  <tr className="bg-slate-950/50">
+                    <td colSpan={7} className="p-4">
+                      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-inner">
+                        <div className="p-3 bg-slate-800/50 flex items-center justify-between border-b border-slate-700/50">
+                          <h4 className="text-[11px] font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                            <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                            Month Wise Stock Report - {mc.monthName}
+                          </h4>
+                          <span className="text-[10px] text-slate-400 font-mono">{mc.items?.length || 0} Items Recorded</span>
+                        </div>
+                        <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                          <table className="w-full text-left text-xs">
+                            <thead className="bg-slate-900 sticky top-0 uppercase text-[9px] font-bold text-slate-500 shadow-sm border-b border-slate-800">
+                              <tr>
+                                <th className="p-3">Item Code</th>
+                                <th className="p-3">Item Name</th>
+                                <th className="p-3 text-right">Opening Qty</th>
+                                <th className="p-3 text-right text-emerald-400">Inward (Grn)</th>
+                                <th className="p-3 text-right text-rose-400">Outward (Min)</th>
+                                <th className="p-3 text-right text-amber-400">Adj. Qty</th>
+                                <th className="p-3 text-right">Closing Qty</th>
+                                <th className="p-3 text-right">Closing Rate</th>
+                                <th className="p-3 text-right font-bold">Total Value</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-800/40">
+                              {(mc.items || []).map(item => (
+                                <tr key={item.itemId} className="hover:bg-slate-800/30">
+                                  <td className="p-3 font-mono text-slate-300">{item.itemCode}</td>
+                                  <td className="p-3 font-semibold text-slate-200">{item.itemName}</td>
+                                  <td className="p-3 text-right font-mono text-slate-400">{item.openingQty}</td>
+                                  <td className="p-3 text-right font-mono text-emerald-400">+{item.inwardQty}</td>
+                                  <td className="p-3 text-right font-mono text-rose-400">-{item.outwardQty}</td>
+                                  <td className="p-3 text-right font-mono text-amber-400">{item.adjustQty !== 0 ? (item.adjustQty > 0 ? `+${item.adjustQty}` : item.adjustQty) : '-'}</td>
+                                  <td className="p-3 text-right font-mono font-bold text-slate-100">{item.closingQty}</td>
+                                  <td className="p-3 text-right font-mono text-slate-400">₹{item.closingRate.toLocaleString('en-IN')}</td>
+                                  <td className="p-3 text-right font-mono font-bold text-emerald-400">₹{item.closingValue.toLocaleString('en-IN')}</td>
+                                </tr>
+                              ))}
+                              {(!mc.items || mc.items.length === 0) && (
+                                <tr>
+                                  <td colSpan={9} className="p-6 text-center text-slate-500 italic">No detailed item records found for this period.</td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
+            {state.monthlyClosings.length === 0 && (
+              <tr>
+                <td colSpan={7} className="p-8 text-center text-slate-500 italic">No closed periods recorded yet.</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

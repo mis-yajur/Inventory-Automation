@@ -83,6 +83,7 @@ export type ViewType =
   | 'fast_slow_moving'
   | 'audit_trail'
   | 'role_management'
+  | 'system_settings'
   | 'plugin_architecture';
 
 

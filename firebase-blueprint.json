@@ -1,165 +1,386 @@
 {
-  "collections": {
-    "items": {
+  "entities": {
+    "Item": {
+      "title": "Item",
       "description": "Inventory items catalog master",
-      "fields": {
-        "id": "string",
-        "itemCode": "string",
-        "itemName": "string",
-        "categoryId": "string",
-        "unitId": "string",
-        "currentQty": "number",
-        "averageRate": "number",
-        "stockValue": "number"
-      }
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "itemCode": { "type": "string" },
+        "itemName": { "type": "string" },
+        "shortName": { "type": "string" },
+        "description": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "categoryName": { "type": "string" },
+        "unitId": { "type": "string" },
+        "unitName": { "type": "string" },
+        "departmentId": { "type": "string" },
+        "departmentName": { "type": "string" },
+        "defaultStoreId": { "type": "string" },
+        "defaultStoreName": { "type": "string" },
+        "preferredSupplierId": { "type": "string" },
+        "preferredSupplierName": { "type": "string" },
+        "partNumber": { "type": "string" },
+        "brand": { "type": "string" },
+        "model": { "type": "string" },
+        "specification": { "type": "string" },
+        "barcode": { "type": "string" },
+        "rack": { "type": "string" },
+        "bin": { "type": "string" },
+        "minStock": { "type": "number" },
+        "maxStock": { "type": "number" },
+        "reorderLevel": { "type": "number" },
+        "reorderQty": { "type": "number" },
+        "safetyFactor": { "type": "number" },
+        "safetyStock": { "type": "number" },
+        "leadTimeDays": { "type": "number" },
+        "avgDailyConsumption": { "type": "number" },
+        "avgMonthlyConsumption": { "type": "number" },
+        "standardRate": { "type": "number" },
+        "lastPurchaseRate": { "type": "number" },
+        "averageRate": { "type": "number" },
+        "criticalItem": { "type": "boolean" },
+        "consumable": { "type": "boolean" },
+        "active": { "type": "boolean" },
+        "currentQty": { "type": "number" },
+        "reservedQty": { "type": "number" },
+        "availableQty": { "type": "number" },
+        "stockValue": { "type": "number" },
+        "abcClass": { "type": "string", "enum": ["A", "B", "C"] },
+        "lastReceiptDate": { "type": "string" },
+        "lastIssueDate": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "itemCode", "itemName", "categoryId", "unitId", "currentQty", "averageRate", "stockValue", "createdAt", "updatedAt"]
     },
-    "categories": {
+    "Category": {
+      "title": "Category",
       "description": "Item categories master data",
-      "fields": {
-        "id": "string",
-        "code": "string",
-        "name": "string",
-        "active": "boolean"
-      }
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["id", "code", "name", "active"]
     },
-    "units": {
+    "Unit": {
+      "title": "Unit",
       "description": "Units of measurement",
-      "fields": {
-        "id": "string",
-        "code": "string",
-        "name": "string",
-        "active": "boolean"
-      }
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "decimalAllowed": { "type": "boolean" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["id", "code", "name", "active"]
     },
-    "departments": {
+    "Department": {
+      "title": "Department",
       "description": "Plant departments & cost centres",
-      "fields": {
-        "id": "string",
-        "code": "string",
-        "name": "string",
-        "active": "boolean"
-      }
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "departmentHead": { "type": "string" },
+        "costCentre": { "type": "string" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["id", "code", "name", "active"]
     },
-    "stores": {
+    "Store": {
+      "title": "Store",
       "description": "Warehouse and store room locations",
-      "fields": {
-        "id": "string",
-        "code": "string",
-        "name": "string",
-        "active": "boolean"
-      }
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "responsiblePerson": { "type": "string" },
+        "location": { "type": "string" },
+        "address": { "type": "string" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["id", "code", "name", "active"]
     },
-    "suppliers": {
+    "Supplier": {
+      "title": "Supplier",
       "description": "Approved vendors list",
-      "fields": {
-        "id": "string",
-        "code": "string",
-        "name": "string",
-        "active": "boolean"
-      }
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "contactPerson": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "address": { "type": "string" },
+        "leadTimeDays": { "type": "number" },
+        "preferred": { "type": "boolean" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["id", "code", "name", "active"]
     },
-    "ledger": {
+    "StockLedgerEntry": {
+      "title": "StockLedgerEntry",
       "description": "Continuous chronological stock ledger entries",
-      "fields": {
-        "id": "string",
-        "transactionDate": "string",
-        "transactionType": "string",
-        "referenceNumber": "string",
-        "itemId": "string",
-        "storeId": "string",
-        "inwardQty": "number",
-        "outwardQty": "number",
-        "runningQty": "number"
-      }
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "transactionDate": { "type": "string" },
+        "transactionType": { "type": "string" },
+        "referenceNumber": { "type": "string" },
+        "itemId": { "type": "string" },
+        "itemCode": { "type": "string" },
+        "itemName": { "type": "string" },
+        "storeId": { "type": "string" },
+        "storeName": { "type": "string" },
+        "departmentId": { "type": "string" },
+        "departmentName": { "type": "string" },
+        "inwardQty": { "type": "number" },
+        "outwardQty": { "type": "number" },
+        "runningQty": { "type": "number" },
+        "rate": { "type": "number" },
+        "inwardValue": { "type": "number" },
+        "outwardValue": { "type": "number" },
+        "runningStockValue": { "type": "number" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "transactionDate", "itemId", "storeId", "runningQty"]
     },
-    "stockInReceipts": {
+    "StockInReceipt": {
+      "title": "StockInReceipt",
       "description": "Goods Inward Receipt notes (GRN)",
-      "fields": {
-        "id": "string",
-        "grnNumber": "string",
-        "grnDate": "string",
-        "supplierId": "string"
-      }
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "receiptNo": { "type": "string" },
+        "date": { "type": "string" },
+        "storeId": { "type": "string" },
+        "supplierId": { "type": "string" },
+        "poReference": { "type": "string" },
+        "challanNo": { "type": "string" },
+        "invoiceNo": { "type": "string" },
+        "status": { "type": "string" },
+        "remarks": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "receiptNo", "storeId", "supplierId"]
     },
-    "materialIssues": {
+    "MaterialIssue": {
+      "title": "MaterialIssue",
       "description": "Material Issue Notes (MIN)",
-      "fields": {
-        "id": "string",
-        "issueNumber": "string",
-        "issueDate": "string",
-        "departmentId": "string"
-      }
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "issueNo": { "type": "string" },
+        "issueDate": { "type": "string" },
+        "storeId": { "type": "string" },
+        "departmentId": { "type": "string" },
+        "requestedBy": { "type": "string" },
+        "issuedBy": { "type": "string" },
+        "machineJob": { "type": "string" },
+        "purpose": { "type": "string" },
+        "status": { "type": "string" },
+        "remarks": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "issueNo", "storeId", "departmentId"]
     },
-    "materialReturns": {
+    "MaterialReturn": {
+      "title": "MaterialReturn",
       "description": "Material Return Notes (MRN)",
-      "fields": {
-        "id": "string",
-        "returnNumber": "string",
-        "returnDate": "string",
-        "storeId": "string"
-      }
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "returnNo": { "type": "string" },
+        "date": { "type": "string" },
+        "originalIssueRef": { "type": "string" },
+        "departmentId": { "type": "string" },
+        "storeId": { "type": "string" },
+        "remarks": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "returnNo", "storeId"]
     },
-    "stockTransfers": {
+    "StockTransfer": {
+      "title": "StockTransfer",
       "description": "Inter-store transfer entries",
-      "fields": {
-        "id": "string",
-        "transferNumber": "string",
-        "transferDate": "string",
-        "sourceStoreId": "string",
-        "targetStoreId": "string"
-      }
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "transferNo": { "type": "string" },
+        "date": { "type": "string" },
+        "fromStoreId": { "type": "string" },
+        "toStoreId": { "type": "string" },
+        "status": { "type": "string" },
+        "remarks": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "transferNo", "fromStoreId", "toStoreId"]
     },
-    "stockAdjustments": {
+    "StockAdjustment": {
+      "title": "StockAdjustment",
       "description": "Physical count audit adjustments",
-      "fields": {
-        "id": "string",
-        "adjustmentNumber": "string",
-        "adjustmentDate": "string",
-        "storeId": "string"
-      }
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "adjustmentNo": { "type": "string" },
+        "date": { "type": "string" },
+        "storeId": { "type": "string" },
+        "adjustmentType": { "type": "string" },
+        "itemId": { "type": "string" },
+        "systemQty": { "type": "number" },
+        "physicalQty": { "type": "number" },
+        "differenceQty": { "type": "number" },
+        "rate": { "type": "number" },
+        "valueDifference": { "type": "number" },
+        "reason": { "type": "string" },
+        "status": { "type": "string" },
+        "approvedBy": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "adjustmentNo", "storeId", "itemId"]
     },
-    "monthlyClosings": {
+    "MonthlyClosing": {
+      "title": "MonthlyClosing",
       "description": "Period closing valuation logs",
-      "fields": {
-        "id": "string",
-        "period": "string",
-        "closedDate": "string"
-      }
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "monthYear": { "type": "string" },
+        "monthName": { "type": "string" },
+        "storeId": { "type": "string" },
+        "storeName": { "type": "string" },
+        "closingValue": { "type": "number" },
+        "status": { "type": "string" },
+        "closedBy": { "type": "string" },
+        "closedAt": { "type": "string" }
+      },
+      "required": ["id", "monthYear", "storeId", "status", "closingValue"]
     },
-    "alerts": {
+    "AlertNotification": {
+      "title": "AlertNotification",
       "description": "Active stock health and threshold alerts",
-      "fields": {
-        "id": "string",
-        "severity": "string",
-        "title": "string",
-        "message": "string"
-      }
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "severity": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "read": { "type": "boolean" },
+        "relatedItemId": { "type": "string" },
+        "actionUrl": { "type": "string" }
+      },
+      "required": ["id", "severity", "title", "message"]
     },
-    "auditLogs": {
+    "AuditLog": {
+      "title": "AuditLog",
       "description": "User actions and configuration audit trail",
-      "fields": {
-        "id": "string",
-        "timestamp": "string",
-        "userId": "string",
-        "action": "string"
-      }
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "time": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "module": { "type": "string" },
+        "action": { "type": "string" },
+        "record": { "type": "string" },
+        "previousValue": { "type": "string" },
+        "newValue": { "type": "string" },
+        "reason": { "type": "string" }
+      },
+      "required": ["id", "timestamp", "userId", "action"]
     },
-    "users": {
+    "UserRole": {
+      "title": "UserRole",
       "description": "User profiles and RBAC definitions",
-      "fields": {
-        "id": "string",
-        "name": "string",
-        "email": "string",
-        "role": "string"
-      }
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string" },
+        "assignedStoreId": { "type": "string" },
+        "status": { "type": "string" },
+        "lastLogin": { "type": "string" },
+        "mfaEnabled": { "type": "boolean" }
+      },
+      "required": ["id", "email", "role"]
     },
-    "settings": {
+    "CompanySettings": {
+      "title": "CompanySettings",
       "description": "Company profile and system-wide configurations",
-      "fields": {
-        "companyName": "string",
-        "gstReference": "string",
-        "valuationMethod": "string"
-      }
+      "type": "object",
+      "properties": {
+        "companyName": { "type": "string" },
+        "companyLogo": { "type": "string" },
+        "address": { "type": "string" },
+        "gstReference": { "type": "string" },
+        "financialYearStart": { "type": "string" },
+        "currency": { "type": "string" },
+        "defaultStoreId": { "type": "string" },
+        "valuationMethod": { "type": "string" },
+        "enableNegativeStock": { "type": "boolean" },
+        "defaultLeadTimeDays": { "type": "number" },
+        "defaultSafetyFactor": { "type": "number" },
+        "reorderMethod": { "type": "string" },
+        "nonMovingDays": { "type": "number" },
+        "deadStockDays": { "type": "number" },
+        "consumptionSpikeThreshold": { "type": "number" },
+        "quantityPrecision": { "type": "number" },
+        "monthlyCloseLock": { "type": "boolean" },
+        "darkMode": { "type": "boolean" }
+      },
+      "required": ["companyName", "currency"]
+    },
+    "PluginModule": {
+      "title": "PluginModule",
+      "description": "Modular plugins",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "description": { "type": "string" },
+        "enabled": { "type": "boolean" },
+        "author": { "type": "string" }
+      },
+      "required": ["id", "name", "enabled"]
     }
+  },
+  "firestore": {
+    "items": { "schema": { "$ref": "#/entities/Item" }, "description": "Inventory items" },
+    "categories": { "schema": { "$ref": "#/entities/Category" }, "description": "Categories" },
+    "units": { "schema": { "$ref": "#/entities/Unit" }, "description": "Units" },
+    "departments": { "schema": { "$ref": "#/entities/Department" }, "description": "Departments" },
+    "stores": { "schema": { "$ref": "#/entities/Store" }, "description": "Stores" },
+    "suppliers": { "schema": { "$ref": "#/entities/Supplier" }, "description": "Suppliers" },
+    "ledger": { "schema": { "$ref": "#/entities/StockLedgerEntry" }, "description": "Ledger" },
+    "stockInReceipts": { "schema": { "$ref": "#/entities/StockInReceipt" }, "description": "GRN" },
+    "materialIssues": { "schema": { "$ref": "#/entities/MaterialIssue" }, "description": "MIN" },
+    "materialReturns": { "schema": { "$ref": "#/entities/MaterialReturn" }, "description": "MRN" },
+    "stockTransfers": { "schema": { "$ref": "#/entities/StockTransfer" }, "description": "Transfers" },
+    "stockAdjustments": { "schema": { "$ref": "#/entities/StockAdjustment" }, "description": "Adjustments" },
+    "monthlyClosings": { "schema": { "$ref": "#/entities/MonthlyClosing" }, "description": "Monthly Closings" },
+    "alerts": { "schema": { "$ref": "#/entities/AlertNotification" }, "description": "Alerts" },
+    "auditLogs": { "schema": { "$ref": "#/entities/AuditLog" }, "description": "Audit Logs" },
+    "users": { "schema": { "$ref": "#/entities/UserRole" }, "description": "Users" },
+    "settings": { "schema": { "$ref": "#/entities/CompanySettings" }, "description": "Settings" },
+    "plugins": { "schema": { "$ref": "#/entities/PluginModule" }, "description": "Plugins" }
   }
 }

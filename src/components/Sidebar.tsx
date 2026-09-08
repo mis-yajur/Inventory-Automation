@@ -83,7 +83,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       title: 'ADMINISTRATION',
       items: [
         { id: 'role_management', label: 'Users & Roles', icon: Shield, allowedRoles: ['Admin'] },
-        { id: 'plugin_architecture', label: 'Modular Plugins', icon: Settings, allowedRoles: ['Admin'] }
+        { id: 'plugin_architecture', label: 'Modular Plugins', icon: Settings, allowedRoles: ['Admin'] },
+        { id: 'system_settings', label: 'System Settings', icon: Settings, allowedRoles: ['Admin'] }
       ]
     }
   ];
@@ -111,6 +112,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <nav className="flex-1 p-3 space-y-5 overflow-y-auto scrollbar-thin">
         {navGroups.map(group => {
           const allowedItems = group.items.filter(item => {
+            if (userRole === 'Super Admin' || userRole === 'Admin') return true;
             if (!item.allowedRoles) return true;
             return item.allowedRoles.includes(userRole);
           });
@@ -159,8 +161,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div>
           <span className="font-semibold text-slate-400">v2.4.0</span> • Enterprise
         </div>
-        <div className="text-emerald-600 font-semibold">
-          IMS Yajur
+        <div className="text-emerald-600 font-semibold flex items-center gap-1.5">
+          <img src="/image.png" alt="Yajur Logo" className="h-4 object-contain opacity-90" />
         </div>
       </div>
     </aside>

@@ -8,9 +8,11 @@ import { BarcodeScannerModal } from './components/BarcodeScannerModal';
 import { ItemDetailModal } from './components/ItemDetailModal';
 import { ItemFormModal } from './components/ItemFormModal';
 import { ApiDocModal } from './components/ApiDocModal';
+import { Lock } from 'lucide-react';
 
-import { isCollectionEmpty, COLLECTIONS } from './services/firebase';
+import { isCollectionEmpty, COLLECTIONS, auth } from './services/firebase';
 import { seedInitialStateToFirebase, hydrateStateFromFirebase, syncStateDiffToFirebase } from './services/syncManager';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, User } from 'firebase/auth';
 
 import { DashboardView } from './views/DashboardView';
 import { ItemMasterView } from './views/ItemMasterView';
@@ -37,6 +39,7 @@ import { FastSlowMovingView } from './views/FastSlowMovingView';
 import { AuditTrailView } from './views/AuditTrailView';
 import { RoleManagementView } from './views/RoleManagementView';
 import { PluginArchitectureView } from './views/PluginArchitectureView';
+import { SystemSettingsView } from './views/SystemSettingsView';
 
 export const App: React.FC = () => {
   const [state, setState] = useState<AppState>(loadInitialState);
@@ -51,10 +54,80 @@ export const App: React.FC = () => {
 
   const prevStateRef = useRef<AppState>(state);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [authChecking, setAuthChecking] = useState(true);
+  
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setAuthChecking(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setLoginError('');
+    
+    let email = '';
+    let role = '';
+    let name = '';
+    
+    if (loginUsername === 'Admin' && loginPassword === 'Admin@1234') {
+      email = 'admin@yajurfibres.com';
+      role = 'Super Admin';
+      name = 'Admin User';
+    } else if (loginUsername === 'User' && loginPassword === 'User@1234') {
+      email = 'user@yajurfibres.com';
+      role = 'Store User';
+      name = 'Standard User';
+    } else {
+      setLoginError('Invalid username or password');
+      return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, loginPassword);
+      updateUserRoleState(email, name, role);
+    } catch (error: any) {
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        try {
+          await createUserWithEmailAndPassword(auth, email, loginPassword);
+          updateUserRoleState(email, name, role);
+        } catch (createError) {
+          console.error('Account creation error:', createError);
+          setLoginError('Could not create account automatically.');
+        }
+      } else {
+        console.error('Login error:', error);
+        setLoginError('Authentication failed.');
+      }
+    }
+  };
+
+  const updateUserRoleState = (email: string, name: string, role: string) => {
+    setState(prev => ({
+      ...prev,
+      activeUser: {
+        id: email,
+        name,
+        email,
+        role: role as any,
+        assignedStoreId: 'str-1',
+        status: 'Active',
+        lastLogin: new Date().toISOString()
+      }
+    }));
+  };
 
   // Initialize and check Firestore on startup
   useEffect(() => {
     const initFirebaseSync = async () => {
+      if (!user) return; // Only sync if authenticated
       try {
         setIsSyncing(true);
         setState(prev => ({ ...prev, isFirebaseSynced: false }));
@@ -87,7 +160,7 @@ export const App: React.FC = () => {
     };
 
     initFirebaseSync();
-  }, []);
+  }, [user]);
 
   // Save to localStorage on state changes and sync diffs to Firebase
   useEffect(() => {
@@ -313,6 +386,8 @@ export const App: React.FC = () => {
         return <RoleManagementView state={state} setState={setState} />;
       case 'plugin_architecture':
         return <PluginArchitectureView state={state} setState={setState} />;
+      case 'system_settings':
+        return <SystemSettingsView state={state} setState={setState} />;
       default:
         return (
           <DashboardView
@@ -323,6 +398,74 @@ export const App: React.FC = () => {
         );
     }
   };
+
+  if (authChecking) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-400 font-mono text-sm">Authenticating...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-8 text-center">
+          <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto shadow-inner shadow-emerald-500/20">
+            <Lock className="w-8 h-8" />
+          </div>
+          
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold text-slate-100 tracking-tight">Enterprise Access</h1>
+            <p className="text-slate-400 text-sm">Sign in to access the secure inventory management system</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <input
+              type="text"
+              placeholder="Username"
+              value={loginUsername}
+              onChange={(e) => setLoginUsername(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 text-slate-100 placeholder:text-slate-400 px-4 py-3.5 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-center font-mono"
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 text-slate-100 placeholder:text-slate-400 px-4 py-3.5 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-center font-mono"
+            />
+            
+            {loginError && (
+              <p className="text-rose-400 text-xs font-semibold">{loginError}</p>
+            )}
+
+            <button
+              type="submit"
+              className="w-full mt-2 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+              Sign In
+            </button>
+          </form>
+
+          <div className="pt-6 mt-6 border-t border-slate-800 text-xs text-slate-400 text-left space-y-2 bg-slate-950/50 p-4 rounded-xl">
+            <p className="font-semibold text-slate-300">Demo Credentials:</p>
+            <div className="flex justify-between items-center">
+              <span>Admin Role:</span>
+              <span className="font-mono text-emerald-400 bg-emerald-950/50 px-2 py-1 rounded">Admin / Admin@1234</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>Standard User Role:</span>
+              <span className="font-mono text-cyan-400 bg-cyan-950/50 px-2 py-1 rounded">User / User@1234</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-500 selection:text-white">

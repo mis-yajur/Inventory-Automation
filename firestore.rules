@@ -1,8 +1,109 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Global safety net
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // In a real application, you would check admin status against a users/roles collection
+    // For this blueprint, we require authentication for standard operations.
+    
+    match /items/{itemId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+    
+    match /categories/{categoryId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+    
+    match /units/{unitId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
+    match /departments/{departmentId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+    
+    match /stores/{storeId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+    
+    match /suppliers/{supplierId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+    
+    match /ledger/{ledgerId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+    
+    match /stockInReceipts/{receiptId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+    
+    match /materialIssues/{issueId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+    
+    match /materialReturns/{returnId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+    
+    match /stockTransfers/{transferId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+    
+    match /stockAdjustments/{adjustmentId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+    
+    match /monthlyClosings/{closingId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+    
+    match /alerts/{alertId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+    
+    match /auditLogs/{logId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn(); // In production, limit to create only
+    }
+    
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      // Only allow users to update their own basic profile, or restrict strictly to admins
+      allow write: if isSignedIn() && request.auth.uid == userId; 
+    }
+    
+    match /settings/{settingId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
+    match /plugins/{pluginId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
     }
   }
 }
