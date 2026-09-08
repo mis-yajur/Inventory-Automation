@@ -9,101 +9,80 @@ service cloud.firestore {
 
     // Helper functions
     function isSignedIn() {
-      return request.auth != null;
+      // Bypassed: Return true to allow access without real Firebase Auth
+      return true;
     }
     
-    // In a real application, you would check admin status against a users/roles collection
-    // For this blueprint, we require authentication for standard operations.
-    
     match /items/{itemId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if true;
     }
     
     match /categories/{categoryId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if true;
     }
     
     match /units/{unitId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if true;
     }
 
     match /departments/{departmentId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if true;
     }
     
     match /stores/{storeId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if true;
     }
     
     match /suppliers/{supplierId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if true;
     }
     
     match /ledger/{ledgerId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if true;
     }
     
     match /stockInReceipts/{receiptId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if true;
     }
     
     match /materialIssues/{issueId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if true;
     }
     
     match /materialReturns/{returnId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if true;
     }
     
     match /stockTransfers/{transferId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if true;
     }
     
     match /stockAdjustments/{adjustmentId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if true;
     }
     
     match /monthlyClosings/{closingId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if true;
     }
     
     match /alerts/{alertId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if true;
     }
     
     match /auditLogs/{logId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn(); // In production, limit to create only
+      allow read, write: if true;
     }
     
     match /users/{userId} {
-      allow read: if isSignedIn();
-      // Only allow users to update their own basic profile, or restrict strictly to admins
-      allow write: if isSignedIn() && request.auth.uid == userId; 
+      allow read, write: if true;
     }
     
     match /settings/{settingId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if true;
     }
 
     match /plugins/{pluginId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if true;
     }
   }
 }

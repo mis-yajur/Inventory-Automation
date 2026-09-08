@@ -21,6 +21,53 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
 export const auth = getAuth(app);
 
+export enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId?: string | null;
+      email?: string | null;
+    }[];
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo: auth.currentUser?.providerData?.map(provider => ({
+        providerId: provider.providerId,
+        email: provider.email,
+      })) || []
+    },
+    operationType,
+    path
+  }
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
+
 export const COLLECTIONS = {
   items: 'items',
   categories: 'categories',
@@ -47,34 +94,37 @@ export async function saveToFirebase<T extends { id: string }>(
   docId: string,
   data: T
 ): Promise<void> {
+  const path = `${collectionName}/${docId}`;
   try {
     const docRef = doc(db, collectionName, docId);
     // Remove any undefined properties before writing to firestore to prevent crashes
     const sanitizedData = JSON.parse(JSON.stringify(data));
     await setDoc(docRef, sanitizedData);
   } catch (err) {
-    console.error(`Firebase Write Error [${collectionName}/${docId}]:`, err);
+    handleFirestoreError(err, OperationType.WRITE, path);
   }
 }
 
 // Save settings (no id, singleton doc)
 export async function saveSettingsToFirebase(data: any): Promise<void> {
+  const path = `${COLLECTIONS.settings}/company_profile`;
   try {
     const docRef = doc(db, COLLECTIONS.settings, 'company_profile');
     const sanitizedData = JSON.parse(JSON.stringify(data));
     await setDoc(docRef, sanitizedData);
   } catch (err) {
-    console.error('Firebase Settings Write Error:', err);
+    handleFirestoreError(err, OperationType.WRITE, path);
   }
 }
 
 // Generic helper to delete a document
 export async function deleteFromFirebase(collectionName: string, docId: string): Promise<void> {
+  const path = `${collectionName}/${docId}`;
   try {
     const docRef = doc(db, collectionName, docId);
     await deleteDoc(docRef);
   } catch (err) {
-    console.error(`Firebase Delete Error [${collectionName}/${docId}]:`, err);
+    handleFirestoreError(err, OperationType.DELETE, path);
   }
 }
 
@@ -85,8 +135,8 @@ export async function isCollectionEmpty(collectionName: string): Promise<boolean
     const snapshot = await getDocs(q);
     return snapshot.empty;
   } catch (err) {
-    console.error(`Firebase Empty Check Error [${collectionName}]:`, err);
-    return true;
+    handleFirestoreError(err, OperationType.LIST, collectionName);
+    return true; // Should not reach here due to throw
   }
 }
 
@@ -100,8 +150,8 @@ export async function fetchCollection<T>(collectionName: string): Promise<T[]> {
     });
     return items;
   } catch (err) {
-    console.error(`Firebase Fetch Error [${collectionName}]:`, err);
-    return [];
+    handleFirestoreError(err, OperationType.LIST, collectionName);
+    return []; // Should not reach here
   }
 }
 
@@ -120,7 +170,7 @@ export async function seedCollection<T extends { id: string }>(
     await batch.commit();
     console.log(`Successfully seeded ${items.length} items to Firebase collection [${collectionName}].`);
   } catch (err) {
-    console.error(`Firebase Seeding Error [${collectionName}]:`, err);
+    handleFirestoreError(err, OperationType.WRITE, collectionName);
   }
 }
 
@@ -136,7 +186,7 @@ export function listenCollection<T>(collectionName: string, callback: (items: T[
       callback(items);
     },
     (err) => {
-      console.error(`Firebase Listen Error [${collectionName}]:`, err);
+      handleFirestoreError(err, OperationType.LIST, collectionName);
     }
   );
 }
