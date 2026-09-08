@@ -90,22 +90,22 @@ export async function hydrateStateFromFirebase(): Promise<Partial<AppState>> {
     const settingsDoc = settingsList.find(s => s.id === 'company_profile');
 
     return {
-      items: items.length ? items : undefined,
-      categories: categories.length ? categories : undefined,
-      units: units.length ? units : undefined,
-      departments: departments.length ? departments : undefined,
-      stores: stores.length ? stores : undefined,
-      suppliers: suppliers.length ? suppliers : undefined,
-      ledger: ledger.length ? ledger : undefined,
-      stockInReceipts: stockInReceipts.length ? stockInReceipts : undefined,
-      materialIssues: materialIssues.length ? materialIssues : undefined,
-      materialReturns: materialReturns.length ? materialReturns : undefined,
-      stockTransfers: stockTransfers.length ? stockTransfers : undefined,
-      stockAdjustments: stockAdjustments.length ? stockAdjustments : undefined,
-      monthlyClosings: monthlyClosings.length ? monthlyClosings : undefined,
-      alerts: alerts.length ? alerts : undefined,
-      auditLogs: auditLogs.length ? auditLogs : undefined,
-      users: users.length ? users : undefined,
+      items: items.length ? items : [],
+      categories: categories.length ? categories : [],
+      units: units.length ? units : [],
+      departments: departments.length ? departments : [],
+      stores: stores.length ? stores : [],
+      suppliers: suppliers.length ? suppliers : [],
+      ledger: ledger.length ? ledger : [],
+      stockInReceipts: stockInReceipts.length ? stockInReceipts : [],
+      materialIssues: materialIssues.length ? materialIssues : [],
+      materialReturns: materialReturns.length ? materialReturns : [],
+      stockTransfers: stockTransfers.length ? stockTransfers : [],
+      stockAdjustments: stockAdjustments.length ? stockAdjustments : [],
+      monthlyClosings: monthlyClosings.length ? monthlyClosings : [],
+      alerts: alerts.length ? alerts : [],
+      auditLogs: auditLogs.length ? auditLogs : [],
+      users: users.length ? users : [],
       settings: settingsDoc ? { ...settingsDoc } : undefined
     };
   } catch (err) {
