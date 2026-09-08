@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Package, AlertTriangle, ArrowDownLeft, ArrowUpRight, TrendingUp,
-  Shield, Layers, Clock, CheckCircle2, ArrowRight, DollarSign,
+  Shield, Layers, Clock, CheckCircle2, ArrowRight, IndianRupee,
   FileSpreadsheet, Sparkles, Send, Check, Loader2, Database
 } from 'lucide-react';
 import {
@@ -170,24 +170,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* Critical Reorder Action Alert Banner */}
       {(criticalCount > 0 || outOfStockCount > 0) && (
-        <div className="p-4 bg-rose-950/30 border border-rose-500/40 rounded-2xl flex items-center justify-between gap-4 animate-in fade-in">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
-              <AlertTriangle className="w-5 h-5 animate-pulse" />
+        <div className="p-4 bg-rose-50 border-l-4 border-rose-500 rounded-r-2xl flex items-center justify-between gap-4 shadow-lg animate-in slide-in-from-top-2 print:hidden">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 shadow-inner">
+              <AlertTriangle className="w-6 h-6 animate-bounce" />
             </div>
-            <div>
-              <h3 className="text-xs font-bold text-rose-300 uppercase tracking-wider">
+            <div className="flex-1">
+              <h3 className="text-sm font-black text-rose-900 uppercase tracking-tight">
                 Action Required: Stock Shortage Exception Triggered
               </h3>
-              <p className="text-xs text-slate-300 mt-0.5">
-                <strong className="text-white">{criticalCount} critical items</strong> are below safety stock cover and <strong className="text-white">{outOfStockCount} items</strong> are completely out of stock.
+              <p className="text-sm text-rose-800/90 font-medium">
+                <strong className="text-rose-950 underline decoration-rose-300 decoration-2">{criticalCount} critical items</strong> are below safety stock cover and <strong className="text-rose-950 underline decoration-rose-300 decoration-2">{outOfStockCount} items</strong> are completely out of stock.
               </p>
             </div>
           </div>
 
           <button
             onClick={() => onNavigateTab('reorder_management')}
-            className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-lg shadow-rose-950"
+            className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-black transition flex items-center gap-2 shrink-0 shadow-xl shadow-rose-900/20 active:scale-95"
           >
             <span>Review Reorder List</span>
             <ArrowRight className="w-4 h-4" />
@@ -203,7 +203,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         >
           <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
             <span>Total Stock Value</span>
-            <DollarSign className="w-4 h-4 text-emerald-400" />
+            <IndianRupee className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="text-xl font-black text-slate-100 mt-2 font-mono">
             {formatValuation(totalStockValue)}

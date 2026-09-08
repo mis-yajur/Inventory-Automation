@@ -1,5 +1,5 @@
 import React from 'react';
-import { DollarSign, PieChart, BarChart3 } from 'lucide-react';
+import { IndianRupee, PieChart, BarChart3 } from 'lucide-react';
 import { AppState } from '../services/store';
 import { formatCurrency } from '../utils/calculations';
 
@@ -33,7 +33,7 @@ export const StockValuationReportView: React.FC<StockValuationReportViewProps> =
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-black text-slate-100 flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-emerald-400" />
+            <IndianRupee className="w-5 h-5 text-emerald-400" />
             <span>Stock Financial Valuation Summary</span>
           </h1>
           <p className="text-xs text-slate-400 mt-0.5">Financial asset valuation breakdown across categories, stores, and valuation models</p>

@@ -57,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-slate-900 border-b border-slate-800 text-slate-800 px-4 py-3 flex items-center justify-between gap-4 shadow-sm">
+    <header className="sticky top-0 z-30 bg-slate-900 border-b border-slate-800 text-slate-100 px-4 py-3 flex items-center justify-between gap-4 shadow-sm">
       {/* Left section: Store selector & quick badges */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 bg-slate-950 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-800 text-sm transition">
@@ -165,10 +165,10 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
 
               <div className="max-h-80 overflow-y-auto divide-y divide-slate-800">
-                {allAlerts.length === 0 ? (
+                {state.alerts.length === 0 ? (
                   <div className="p-6 text-center text-slate-500 text-xs">No alerts found</div>
                 ) : (
-                  allAlerts.slice(0, 8).map(alert => (
+                  state.alerts.slice(0, 8).map(alert => (
                     <div
                       key={alert.id}
                       onClick={() => {
@@ -221,7 +221,7 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="text-[10px] text-emerald-600 leading-none font-semibold">{state.activeUser?.role || 'Super Admin'}</div>
           </div>
           <button
-            onClick={() => signOut(auth)}
+            onClick={() => window.location.reload()}
             className="p-1 hover:bg-slate-800 rounded-md text-slate-400 hover:text-rose-400 transition"
             title="Sign Out"
           >

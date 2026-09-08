@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, BarChart2, DollarSign, Printer } from 'lucide-react';
+import { TrendingUp, BarChart2, Printer } from 'lucide-react';
 import { AppState, getMonthlyConsumption } from '../services/store';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '../utils/calculations';

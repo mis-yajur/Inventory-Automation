@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Scale, Plus, UploadCloud, FileText } from 'lucide-react';
+import { Scale, Plus, UploadCloud, FileText, Loader2 } from 'lucide-react';
 import { AppState } from '../services/store';
 import { Unit } from '../types';
 
@@ -16,7 +16,8 @@ export const UnitsView: React.FC<UnitsViewProps> = ({ state, setState }) => {
   const [decimalAllowed, setDecimalAllowed] = useState(false);
   const [bulkText, setBulkText] = useState('');
   const [dragActive, setDragActive] = useState(false);
-  const { parseCsv, isParsing, error } = useCsvParser();
+  const isParsing = false; // Placeholder for now
+  const error = null; // Placeholder for now
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();

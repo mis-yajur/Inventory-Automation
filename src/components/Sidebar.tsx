@@ -90,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-[calc(100vh-57px)] sticky top-[57px] shrink-0 text-slate-700 select-none overflow-y-auto shadow-sm print:hidden">
+    <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-[calc(100vh-57px)] sticky top-[57px] shrink-0 text-slate-300 select-none overflow-y-auto shadow-sm print:hidden">
       {/* Brand Header */}
       <div className="p-4 border-b border-slate-800 bg-slate-950/60">
         <div className="flex items-center gap-3">
@@ -134,12 +134,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       onClick={() => onViewChange(item.id)}
                       className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition group ${
                         isActive
-                          ? 'bg-emerald-900 text-emerald-700 font-semibold border border-emerald-800/40'
+                          ? 'bg-emerald-950 text-emerald-400 font-semibold border border-emerald-800/40'
                           : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <Icon className={`w-4 h-4 transition ${isActive ? 'text-emerald-700' : 'text-slate-500 group-hover:text-slate-300'}`} />
+                        <Icon className={`w-4 h-4 transition ${isActive ? 'text-emerald-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
                         <span>{item.label}</span>
                       </div>
                       {item.badge !== undefined && (
