@@ -59,15 +59,13 @@ export const initialDepartments: Department[] = [
 ];
 
 export const initialStores: Store[] = [
-  { id: 'str-1', code: 'STR-01', name: 'Main Store', responsiblePerson: 'M. Ghosh', location: 'Central Block', address: 'Central Warehouse, Gate 2', active: true },
-  { id: 'str-2', code: 'STR-02', name: 'Mechanical Store', responsiblePerson: 'K. Paul', location: 'Maintenance Block', address: 'Bay 4 Maintenance', active: true },
-  { id: 'str-3', code: 'STR-03', name: 'Electrical Store', responsiblePerson: 'S. Roy', location: 'Power House', address: 'Control Room Substation 1', active: true }
+  { id: 'str-1', code: 'STR-01', name: 'Main Store', responsiblePerson: 'M. Ghosh', location: 'Central Block', address: 'Central Warehouse, Gate 2', active: true }
 ];
 
 export const initialSuppliers: Supplier[] = [
-  { id: 'sup-1', code: 'SUP-001', name: 'ABC Bearings Pvt Ltd', contactPerson: 'V. Mehta', phone: '+91 98XXXXXX11', email: 'sales@abcbearings.com', address: 'Industrial Area Phase 2', leadTimeDays: 12, preferred: true, active: true },
-  { id: 'sup-2', code: 'SUP-002', name: 'Eastern Lubes', contactPerson: 'N. Sharma', phone: '+91 98XXXXXX22', email: 'orders@easternlubes.in', address: 'Lube Park Hub', leadTimeDays: 7, preferred: true, active: true },
-  { id: 'sup-3', code: 'SUP-003', name: 'Industrial Safety Co.', contactPerson: 'R. Kapoor', phone: '+91 98XXXXXX33', email: 'info@industrialsafety.com', address: 'Safety Complex', leadTimeDays: 5, preferred: false, active: true }
+  { id: 'sup-1', code: 'SUP-001', name: 'ABC Bearings Pvt Ltd', contactPerson: 'Amit Patel', email: 'info@abcbearings.com', phone: '+91 98220 12345', address: '12, GIDC Industrial Estate, Vadodara, Gujarat', leadTimeDays: 15, preferred: true, active: true },
+  { id: 'sup-2', code: 'SUP-002', name: 'Eastern Lubes', contactPerson: 'Rajesh Sen', email: 'sales@easternlubes.com', phone: '+91 98300 54321', address: 'Plot 45, Salt Lake Sector V, Kolkata, WB', leadTimeDays: 7, preferred: true, active: true },
+  { id: 'sup-3', code: 'SUP-003', name: 'Industrial Safety Co.', contactPerson: 'Vikram Shah', email: 'contracts@indus-safety.com', phone: '+91 98450 98765', address: '55, Peenya Industrial Area, Bengaluru, Karnataka', leadTimeDays: 5, preferred: true, active: true }
 ];
 
 export const initialItems: Item[] = [
@@ -863,7 +861,24 @@ export function loadInitialState(): AppState {
     if (saved) {
       const parsed = JSON.parse(saved);
       return {
-        ...parsed,
+        items: parsed.items || initialItems,
+        categories: parsed.categories || initialCategories,
+        units: parsed.units || initialUnits,
+        departments: parsed.departments || initialDepartments,
+        stores: parsed.stores || initialStores,
+        suppliers: parsed.suppliers || initialSuppliers,
+        ledger: parsed.ledger || initialLedger,
+        stockInReceipts: parsed.stockInReceipts || [],
+        materialIssues: parsed.materialIssues || [],
+        materialReturns: parsed.materialReturns || [],
+        stockTransfers: parsed.stockTransfers || [],
+        stockAdjustments: parsed.stockAdjustments || [],
+        monthlyClosings: parsed.monthlyClosings || [],
+        alerts: parsed.alerts || initialAlerts,
+        auditLogs: parsed.auditLogs || initialAuditLogs,
+        users: parsed.users || initialUsers,
+        settings: parsed.settings || initialSettings,
+        activeStoreId: parsed.activeStoreId || 'str-1',
         activeUser: parsed.activeUser || initialUsers[0],
         isOfflineMode: false,
         isFirebaseSynced: true

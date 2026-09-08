@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Zap, Clock, AlertTriangle } from 'lucide-react';
 import { AppState } from '../services/store';
 
@@ -7,6 +7,8 @@ interface FastSlowMovingViewProps {
 }
 
 export const FastSlowMovingView: React.FC<FastSlowMovingViewProps> = ({ state }) => {
+  const [fsnFilter, setFsnFilter] = useState<'ALL' | 'FAST' | 'SLOW' | 'NON'>('ALL');
+
   // Classify FSN based on avgMonthlyConsumption
   const fastMoving = state.items.filter(i => i.avgMonthlyConsumption >= 15);
   const slowMoving = state.items.filter(i => i.avgMonthlyConsumption > 0 && i.avgMonthlyConsumption < 15);
@@ -51,8 +53,28 @@ export const FastSlowMovingView: React.FC<FastSlowMovingViewProps> = ({ state })
       </div>
 
       <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <div className="p-4 bg-slate-950/60 border-b border-slate-800">
+        <div className="p-4 bg-slate-950/60 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">FSN Classified Inventory Table</h3>
+          <div className="flex flex-wrap gap-1.5">
+            {(['ALL', 'FAST', 'SLOW', 'NON'] as const).map(cls => (
+              <button
+                key={cls}
+                onClick={() => setFsnFilter(cls)}
+                className={`px-3 py-1 text-[11px] font-bold rounded-lg border transition ${
+                  fsnFilter === cls
+                    ? cls === 'ALL' ? 'bg-slate-800 text-white border-slate-700' :
+                      cls === 'FAST' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' :
+                      cls === 'SLOW' ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' :
+                      'bg-rose-500/20 text-rose-400 border-rose-500/40'
+                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
+                }`}
+              >
+                {cls === 'ALL' ? 'All FSN' :
+                 cls === 'FAST' ? 'Fast Moving' :
+                 cls === 'SLOW' ? 'Slow Moving' : 'Non Moving'}
+              </button>
+            ))}
+          </div>
         </div>
         <table className="w-full text-left text-xs text-slate-300">
           <thead className="bg-slate-950 uppercase text-[10px] font-bold text-slate-400">
@@ -66,30 +88,41 @@ export const FastSlowMovingView: React.FC<FastSlowMovingViewProps> = ({ state })
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/60">
-            {state.items.map(item => {
-              const isFast = item.avgMonthlyConsumption >= 15;
-              const isSlow = item.avgMonthlyConsumption > 0 && item.avgMonthlyConsumption < 15;
-              const fsn = isFast ? 'Fast Moving' : isSlow ? 'Slow Moving' : 'Non Moving';
+            {state.items
+              .filter(item => {
+                const isFast = item.avgMonthlyConsumption >= 15;
+                const isSlow = item.avgMonthlyConsumption > 0 && item.avgMonthlyConsumption < 15;
+                const isNon = item.avgMonthlyConsumption === 0 || !item.lastIssueDate;
+                if (fsnFilter === 'ALL') return true;
+                if (fsnFilter === 'FAST') return isFast;
+                if (fsnFilter === 'SLOW') return isSlow;
+                if (fsnFilter === 'NON') return isNon;
+                return true;
+              })
+              .map(item => {
+                const isFast = item.avgMonthlyConsumption >= 15;
+                const isSlow = item.avgMonthlyConsumption > 0 && item.avgMonthlyConsumption < 15;
+                const fsn = isFast ? 'Fast Moving' : isSlow ? 'Slow Moving' : 'Non Moving';
 
-              return (
-                <tr key={item.id} className="hover:bg-slate-800/50">
-                  <td className="p-3 font-mono font-bold text-emerald-400">{item.itemCode}</td>
-                  <td className="p-3 font-semibold text-slate-100">{item.itemName}</td>
-                  <td className="p-3 text-right font-mono text-slate-300">{item.availableQty} {item.unitName}</td>
-                  <td className="p-3 text-right font-mono font-bold text-slate-200">{item.avgMonthlyConsumption}</td>
-                  <td className="p-3 font-mono text-slate-400">{item.lastIssueDate || 'No Issues'}</td>
-                  <td className="p-3 text-center">
-                    <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] border ${
-                      isFast ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-                      isSlow ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
-                      'bg-rose-500/20 text-rose-400 border-rose-500/30'
-                    }`}>
-                      {fsn}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
+                return (
+                  <tr key={item.id} className="hover:bg-slate-800/50">
+                    <td className="p-3 font-mono font-bold text-emerald-400">{item.itemCode}</td>
+                    <td className="p-3 font-semibold text-slate-100">{item.itemName}</td>
+                    <td className="p-3 text-right font-mono text-slate-300">{item.availableQty} {item.unitName}</td>
+                    <td className="p-3 text-right font-mono font-bold text-slate-200">{item.avgMonthlyConsumption}</td>
+                    <td className="p-3 font-mono text-slate-400">{item.lastIssueDate || 'No Issues'}</td>
+                    <td className="p-3 text-center">
+                      <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] border ${
+                        isFast ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                        isSlow ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                        'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                      }`}>
+                        {fsn}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>

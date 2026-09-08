@@ -15,7 +15,8 @@ export const StockAdjustmentView: React.FC<StockAdjustmentViewProps> = ({ state,
   const [adjustmentType, setAdjustmentType] = useState<any>('Physical Verification Shortage');
   const [reason, setReason] = useState('Stock count audit variance');
 
-  const selectedItem = state.items.find(i => i.id === itemId);
+  const activeItemId = itemId || state.items[0]?.id || '';
+  const selectedItem = state.items.find(i => i.id === activeItemId);
   const systemQty = selectedItem ? selectedItem.currentQty : 0;
   const differenceQty = physicalQty - systemQty;
 

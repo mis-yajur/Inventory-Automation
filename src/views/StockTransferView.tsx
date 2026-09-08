@@ -19,7 +19,8 @@ export const StockTransferView: React.FC<StockTransferViewProps> = ({ state, set
     e.preventDefault();
     if (fromStoreId === toStoreId) return;
 
-    const item = state.items.find(i => i.id === itemId);
+    const activeItemId = itemId || state.items[0]?.id;
+    const item = state.items.find(i => i.id === activeItemId);
     if (!item) return;
 
     const transferNo = `TRF-2026-${String(state.stockTransfers.length + 44).padStart(3, '0')}`;

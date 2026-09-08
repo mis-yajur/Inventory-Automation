@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Award, PieChart, Layers } from 'lucide-react';
 import { AppState } from '../services/store';
 import { performABCAnalysis, formatCurrency } from '../utils/calculations';
@@ -8,6 +8,7 @@ interface AbcAnalysisViewProps {
 }
 
 export const AbcAnalysisView: React.FC<AbcAnalysisViewProps> = ({ state }) => {
+  const [classFilter, setClassFilter] = useState<'ALL' | 'A' | 'B' | 'C'>('ALL');
   const abcData = performABCAnalysis(state.items);
 
   const groupA = abcData.filter(i => i.abcClass === 'A');
@@ -82,8 +83,26 @@ export const AbcAnalysisView: React.FC<AbcAnalysisViewProps> = ({ state }) => {
 
       {/* Item ABC Classification Table */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <div className="p-4 bg-slate-950/60 border-b border-slate-800">
+        <div className="p-4 bg-slate-950/60 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">ABC Classified Inventory SKUs</h3>
+          <div className="flex flex-wrap gap-1.5">
+            {(['ALL', 'A', 'B', 'C'] as const).map(cls => (
+              <button
+                key={cls}
+                onClick={() => setClassFilter(cls)}
+                className={`px-3 py-1 text-[11px] font-bold rounded-lg border transition ${
+                  classFilter === cls
+                    ? cls === 'ALL' ? 'bg-slate-800 text-white border-slate-700' :
+                      cls === 'A' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' :
+                      cls === 'B' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40' :
+                      'bg-purple-500/20 text-purple-400 border-purple-500/40'
+                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
+                }`}
+              >
+                {cls === 'ALL' ? 'All Classes' : `Class ${cls}`}
+              </button>
+            ))}
+          </div>
         </div>
         <table className="w-full text-left text-xs text-slate-300">
           <thead className="bg-slate-950 uppercase text-[10px] font-bold text-slate-400">
@@ -99,26 +118,31 @@ export const AbcAnalysisView: React.FC<AbcAnalysisViewProps> = ({ state }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/60">
-            {abcData.map((item, idx) => (
-              <tr key={item.id} className="hover:bg-slate-800/50">
-                <td className="p-3 font-mono text-slate-500">#{idx + 1}</td>
-                <td className="p-3 font-mono font-bold text-emerald-400">{item.itemCode}</td>
-                <td className="p-3 font-semibold text-slate-100">{item.itemName}</td>
-                <td className="p-3 text-right font-mono text-slate-300">{item.currentQty} {item.unitName}</td>
-                <td className="p-3 text-right font-mono text-slate-400">₹{item.averageRate}</td>
-                <td className="p-3 text-right font-mono font-bold text-slate-100">{formatCurrency(item.stockValue)}</td>
-                <td className="p-3 text-right font-mono text-slate-400">{item.cumulativePct.toFixed(1)}%</td>
-                <td className="p-3 text-center">
-                  <span className={`px-2.5 py-0.5 rounded-full font-black text-[10px] border ${
-                    item.abcClass === 'A' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-                    item.abcClass === 'B' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' :
-                    'bg-purple-500/20 text-purple-400 border-purple-500/30'
-                  }`}>
-                    CLASS {item.abcClass}
-                  </span>
-                </td>
-              </tr>
-            ))}
+            {abcData
+              .filter(item => classFilter === 'ALL' || item.abcClass === classFilter)
+              .map((item) => {
+                const originalRank = abcData.indexOf(item) + 1;
+                return (
+                  <tr key={item.id} className="hover:bg-slate-800/50">
+                    <td className="p-3 font-mono text-slate-500">#{originalRank}</td>
+                    <td className="p-3 font-mono font-bold text-emerald-400">{item.itemCode}</td>
+                    <td className="p-3 font-semibold text-slate-100">{item.itemName}</td>
+                    <td className="p-3 text-right font-mono text-slate-300">{item.currentQty} {item.unitName}</td>
+                    <td className="p-3 text-right font-mono text-slate-400">₹{item.averageRate}</td>
+                    <td className="p-3 text-right font-mono font-bold text-slate-100">{formatCurrency(item.stockValue)}</td>
+                    <td className="p-3 text-right font-mono text-slate-400">{item.cumulativePct.toFixed(1)}%</td>
+                    <td className="p-3 text-center">
+                      <span className={`px-2.5 py-0.5 rounded-full font-black text-[10px] border ${
+                        item.abcClass === 'A' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                        item.abcClass === 'B' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' :
+                        'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                      }`}>
+                        CLASS {item.abcClass}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>

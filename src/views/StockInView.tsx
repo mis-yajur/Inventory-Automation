@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowDownLeft, Plus, Trash2, CheckCircle2, FileText, Printer } from 'lucide-react';
+import { ArrowDownLeft, Plus, Trash2, CheckCircle2, FileText, Printer, Leaf, Globe } from 'lucide-react';
 import { AppState, saveStateToStorage } from '../services/store';
 import { StockInReceipt, StockInItem, StockLedgerEntry } from '../types';
 import { calculateWeightedAverageRate, formatCurrency } from '../utils/calculations';
@@ -17,6 +17,8 @@ export const StockInView: React.FC<StockInViewProps> = ({ state, setState }) => 
   const [challanNo, setChallanNo] = useState(`CH-${Math.floor(1000 + Math.random() * 9000)}`);
   const [invoiceNo, setInvoiceNo] = useState(`INV-${Math.floor(10000 + Math.random() * 90000)}`);
   const [remarks, setRemarks] = useState('');
+  const [qcHold, setQcHold] = useState(false);
+
 
   const [receiptItems, setReceiptItems] = useState<StockInItem[]>([
     {
@@ -86,12 +88,13 @@ export const StockInView: React.FC<StockInViewProps> = ({ state, setState }) => 
       poReference,
       challanNo,
       invoiceNo,
-      status: 'Posted',
+      status: qcHold ? 'Quarantine Hold' : 'Posted',
       items: receiptItems,
-      remarks,
+      remarks: qcHold ? `[QC Hold Quarantine] ${remarks}` : remarks,
       createdBy: state.activeUser.name,
       createdAt: new Date().toISOString()
     };
+
 
     // Update Item Master quantities and Weighted Average Rates
     const ledgerEntries: StockLedgerEntry[] = [];
@@ -160,8 +163,10 @@ export const StockInView: React.FC<StockInViewProps> = ({ state, setState }) => 
             action: 'POST' as const,
             record: receiptNo,
             previousValue: 'Draft',
-            newValue: `Posted ${receiptItems.length} items`,
-            reason: `Goods receipt note posted against PO ${poReference}`
+            newValue: qcHold ? `Quarantine Hold: ${receiptItems.length} items` : `Posted ${receiptItems.length} items`,
+            reason: qcHold 
+              ? `Goods receipt note posted and marked as QC Hold / Quarantine against PO ${poReference}`
+              : `Goods receipt note posted against PO ${poReference}`
           },
           ...prev.auditLogs
         ]
@@ -198,9 +203,14 @@ export const StockInView: React.FC<StockInViewProps> = ({ state, setState }) => 
       {showNew && (
         <form onSubmit={handlePostReceipt} className="p-5 bg-slate-900 border border-slate-700 rounded-2xl space-y-5 animate-in fade-in">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
-              Goods Receipt Note (GRN) Inward Entry Form
-            </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                Goods Receipt Note (GRN) Inward Entry Form
+              </h3>
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-900 text-emerald-400 text-[10px] font-mono font-bold">
+                GRN No: GRN-2026-{String(state.stockInReceipts.length + 125).padStart(3, '0')} (Auto-Generated)
+              </span>
+            </div>
             <span className="text-xs text-slate-400 font-mono">Date: {new Date().toISOString().split('T')[0]}</span>
           </div>
 
@@ -337,7 +347,40 @@ export const StockInView: React.FC<StockInViewProps> = ({ state, setState }) => 
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+          {/* Feature 6: Freight CO2 Carbon Footprint Estimator */}
+          <div className="p-3 bg-slate-950/80 rounded-xl border border-emerald-950/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400">
+                <Leaf className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] font-semibold uppercase tracking-wider">Freight CO₂ Emissions Assessment</span>
+                <p className="text-slate-200 text-[11px]">
+                  Estimated Transit Carbon Footprint: <strong className="text-emerald-400 font-mono text-xs">{(receiptItems.reduce((s, i) => s + (Number(i.qty) || 0), 0) * 0.42).toFixed(1)} kg CO₂e</strong>
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
+                Eco-Optimized Route (98.2% Tier 1)
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-3 border-t border-slate-800 gap-3">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="qcHoldCheckbox"
+                checked={qcHold}
+                onChange={e => setQcHold(e.target.checked)}
+                className="w-4 h-4 rounded bg-slate-800 border-slate-700 text-emerald-600 focus:ring-emerald-500"
+              />
+              <label htmlFor="qcHoldCheckbox" className="text-xs text-amber-400 font-bold flex items-center gap-1.5 cursor-pointer">
+                <span>Route to QC Inspection / Quarantine Hold</span>
+              </label>
+            </div>
+
             <div className="text-xs text-slate-400">
               Total Inward Value: <strong className="text-emerald-400 font-mono text-sm ml-1">
                 ₹{receiptItems.reduce((s, i) => s + (i.value || 0), 0).toLocaleString('en-IN')}
@@ -399,14 +442,19 @@ export const StockInView: React.FC<StockInViewProps> = ({ state, setState }) => 
                 </tr>
               </thead>
               <tbody>
-                {selectedReceiptForPrint.items.map((it, i) => (
-                  <tr key={i} className="border-t border-slate-800">
-                    <td className="p-2 font-semibold text-slate-200">{it.itemId}</td>
-                    <td className="p-2 text-right font-mono text-slate-100">{it.qty} {it.unit}</td>
-                    <td className="p-2 text-right font-mono">₹{it.rate}</td>
-                    <td className="p-2 text-right font-mono font-bold text-emerald-400">₹{it.value}</td>
-                  </tr>
-                ))}
+                {selectedReceiptForPrint.items.map((it, i) => {
+                  const itemObj = state.items.find(x => x.id === it.itemId);
+                  return (
+                    <tr key={i} className="border-t border-slate-800">
+                      <td className="p-2 font-semibold text-slate-200">
+                        {itemObj ? `${itemObj.itemCode} - ${itemObj.itemName}` : it.itemId}
+                      </td>
+                      <td className="p-2 text-right font-mono text-slate-100">{it.qty} {it.unit}</td>
+                      <td className="p-2 text-right font-mono">₹{it.rate}</td>
+                      <td className="p-2 text-right font-mono font-bold text-emerald-400">₹{it.value}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -447,7 +495,11 @@ export const StockInView: React.FC<StockInViewProps> = ({ state, setState }) => 
                     <td className="p-3 text-slate-200">{rec.poReference}</td>
                     <td className="p-3 font-mono text-slate-400">{rec.challanNo}</td>
                     <td className="p-3 text-center">
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-[10px] border border-emerald-500/30">
+                      <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] border ${
+                        rec.status === 'Quarantine Hold'
+                          ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                          : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                      }`}>
                         {rec.status}
                       </span>
                     </td>

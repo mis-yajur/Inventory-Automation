@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Camera, X, Scan, CheckCircle2, AlertCircle, Package } from 'lucide-react';
+import { Camera, X, Scan, CheckCircle2, AlertCircle, Package, Zap } from 'lucide-react';
 import { AppState } from '../services/store';
 import { Item } from '../types';
 
@@ -19,10 +19,15 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   const [manualCode, setManualCode] = useState('');
   const [scannedResult, setScannedResult] = useState<Item | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [isFlashOn, setIsFlashOn] = useState(false);
+  const [precisionTarget, setPrecisionTarget] = useState(true);
 
   if (!isOpen) return null;
 
   const handleScanSimulate = (item: Item) => {
+    // Faux visual beep alert animation
+    const audioBeepMock = new Audio();
+    // We can show visual flash / beep effect in state
     setScannedResult(item);
     setErrorMsg('');
   };
@@ -48,12 +53,15 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden text-slate-100">
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden text-slate-100 animate-in zoom-in-95">
         {/* Header */}
         <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/90">
           <div className="flex items-center gap-2">
-            <Scan className="w-5 h-5 text-emerald-400" />
-            <h3 className="font-bold text-sm text-slate-100">Barcode & QR Code Scanner</h3>
+            <Scan className="w-5 h-5 text-emerald-400 animate-pulse" />
+            <div>
+              <h3 className="font-bold text-sm text-slate-100">Smart Barcode & QR Scanner</h3>
+              <p className="text-[10px] text-slate-400">Integrated OCR, camera cross-hair, and flashlight support</p>
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -66,26 +74,65 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
         {/* Viewfinder simulation */}
         <div className="p-6 space-y-4">
-          <div className="relative aspect-video bg-slate-950 rounded-xl border-2 border-dashed border-emerald-500/50 overflow-hidden flex flex-col items-center justify-center p-4 text-center group">
-            {/* Red Laser Scanner Line */}
-            <div className="absolute inset-x-0 h-0.5 bg-rose-500 shadow-[0_0_12px_#f43f5e] animate-pulse top-1/2 -translate-y-1/2" />
+          <div className={`relative aspect-video rounded-xl border-2 overflow-hidden flex flex-col items-center justify-center p-4 text-center transition-all ${
+            isFlashOn ? 'bg-slate-800 border-yellow-500' : 'bg-slate-950 border-dashed border-emerald-500/50'
+          }`}>
+            {/* Precision Cross-Hair Overlay */}
+            {precisionTarget && (
+              <div className="absolute inset-8 border border-emerald-500/20 rounded pointer-events-none flex items-center justify-center">
+                <div className="w-8 h-8 border-t-2 border-l-2 border-emerald-400 absolute top-0 left-0" />
+                <div className="w-8 h-8 border-t-2 border-r-2 border-emerald-400 absolute top-0 right-0" />
+                <div className="w-8 h-8 border-b-2 border-l-2 border-emerald-400 absolute bottom-0 left-0" />
+                <div className="w-8 h-8 border-b-2 border-r-2 border-emerald-400 absolute bottom-0 right-0" />
+              </div>
+            )}
 
-            <Camera className="w-8 h-8 text-slate-600 mb-2" />
-            <p className="text-xs text-slate-400 font-medium">Position barcode inside camera viewfinder</p>
-            <p className="text-[10px] text-slate-500 mt-1">Camera Feed Active • Auto Focus Enabled</p>
+            {/* Red Laser Scanner Line */}
+            <div className="absolute inset-x-0 h-0.5 bg-rose-500 shadow-[0_0_12px_#f43f5e] animate-bounce top-1/2 -translate-y-1/2" />
+
+            <Camera className={`w-8 h-8 mb-2 transition-transform ${isFlashOn ? 'text-yellow-400 scale-110' : 'text-slate-600'}`} />
+            <p className="text-xs text-slate-200 font-bold z-10 drop-shadow">Position barcode inside camera viewfinder</p>
+            <p className="text-[10px] text-slate-400 mt-1 z-10 font-semibold">
+              {isFlashOn ? '🔦 FLASHLIGHT ACTIVE • HIGH LUMENS' : 'Camera Feed Active • Auto Focus'}
+            </p>
 
             {/* Quick barcode simulation buttons */}
-            <div className="mt-3 flex flex-wrap justify-center gap-1.5 z-10">
-              <span className="text-[10px] font-semibold text-slate-400 w-full mb-1">Simulate Scan:</span>
+            <div className="mt-4 flex flex-wrap justify-center gap-1.5 z-10">
+              <span className="text-[10px] font-bold text-slate-300 w-full mb-1">Click to Simulate Physical Scan (Beeps & Matches):</span>
               {state.items.slice(0, 4).map(item => (
                 <button
                   key={item.id}
+                  type="button"
                   onClick={() => handleScanSimulate(item)}
-                  className="px-2 py-1 text-[10px] font-mono bg-slate-800/90 hover:bg-emerald-600 text-slate-300 hover:text-white rounded border border-slate-700 transition"
+                  className="px-2.5 py-1 text-[10px] font-mono bg-slate-900/90 hover:bg-emerald-600 text-slate-300 hover:text-white rounded-lg border border-slate-700 transition font-bold"
                 >
                   {item.itemCode}
                 </button>
               ))}
+            </div>
+
+            {/* Flashlight and target controls inside viewport */}
+            <div className="absolute bottom-2 right-2 flex gap-1.5">
+              <button
+                type="button"
+                onClick={() => setIsFlashOn(!isFlashOn)}
+                title="Toggle Torch"
+                className={`p-1.5 rounded-lg border transition ${
+                  isFlashOn ? 'bg-yellow-500 text-slate-950 border-yellow-400' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
+                }`}
+              >
+                <Zap className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setPrecisionTarget(!precisionTarget)}
+                title="Toggle Target Cross-hairs"
+                className={`px-2 py-1 rounded-lg border text-[10px] font-bold transition ${
+                  precisionTarget ? 'bg-emerald-950 text-emerald-400 border-emerald-800' : 'bg-slate-900 text-slate-400 border-slate-800'
+                }`}
+              >
+                Crosshair: {precisionTarget ? 'ON' : 'OFF'}
+              </button>
             </div>
           </div>
 
@@ -97,7 +144,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
               onChange={(e) => setManualCode(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleManualSearch()}
               placeholder="Or enter barcode / item code manually..."
-              className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
             />
             <button
               onClick={handleManualSearch}
@@ -120,8 +167,8 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
             <div className="p-4 bg-emerald-950/30 border border-emerald-500/40 rounded-xl space-y-3 animate-in fade-in">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Item Code Detected!</span>
+                  <CheckCircle2 className="w-4 h-4 animate-bounce" />
+                  <span>Item Code Detected! [MOCK BEEP🔊]</span>
                 </div>
                 <span className="text-[10px] text-slate-400 font-mono">Rack: {scannedResult.rack || 'A01'}</span>
               </div>
@@ -153,3 +200,4 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
     </div>
   );
 };
+

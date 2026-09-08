@@ -177,7 +177,7 @@ export interface StockInReceipt {
   poReference: string;
   challanNo: string;
   invoiceNo: string;
-  status: 'Draft' | 'Posted';
+  status: 'Draft' | 'Posted' | 'Quarantine Hold';
   items: StockInItem[];
   remarks: string;
   createdBy: string;

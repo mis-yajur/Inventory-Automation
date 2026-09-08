@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowUpRight, Plus, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ArrowUpRight, Plus, Trash2, CheckCircle2, AlertCircle, ShieldCheck, Lock, Ticket, FileText, Printer, Check, X } from 'lucide-react';
 import { AppState, saveStateToStorage } from '../services/store';
 import { MaterialIssue, MaterialIssueItem, StockLedgerEntry } from '../types';
 
@@ -16,6 +16,15 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = ({ state, set
   const [issuedBy, setIssuedBy] = useState('M. Ghosh');
   const [machineJob, setMachineJob] = useState('Line 2 Breakdown Repair');
   const [remarks, setRemarks] = useState('');
+
+  // Feature 8: High-Value Approval (Double-Signature) and Feature 4 (Gate Pass) States
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [coSignerName, setCoSignerName] = useState('P. K. Sen (Stores Mgr)');
+  const [pinError, setPinError] = useState('');
+  const [gatePassItem, setGatePassItem] = useState<any | null>(null);
+  const [gatePassType, setGatePassType] = useState<'Returnable' | 'Non-Returnable'>('Returnable');
+  const [gatePassPrinted, setGatePassPrinted] = useState(false);
 
   const [issueItems, setIssueItems] = useState<MaterialIssueItem[]>([
     {
@@ -90,23 +99,36 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = ({ state, set
       }
     }
 
+    // Feature 8: High Value Dual-Signature Rule
+    const totalVal = issueItems.reduce((s, i) => s + (i.issueValue || 0), 0);
+    if (totalVal > 25000 && !showPinModal) {
+      setShowPinModal(true);
+      return;
+    }
+
+    executePosting();
+  };
+
+  const executePosting = (coSigner?: string) => {
     const issueNo = `MIN-2026-${String(state.materialIssues.length + 342).padStart(3, '0')}`;
     const now = new Date().toISOString().split('T')[0];
     const deptObj = state.departments.find(d => d.id === departmentId);
     const storeObj = state.stores.find(s => s.id === storeId);
+
+    const finalRemarks = coSigner ? `${remarks} | [DUAL APPROVED BY: ${coSigner}]` : remarks;
 
     const newIssue: MaterialIssue = {
       id: `iss-${Date.now()}`,
       issueNo,
       issueDate: now,
       storeId,
-      departmentId,
+      departmentId: deptObj?.name || departmentId,
       requestedBy,
       issuedBy,
       machineJob,
       status: 'Posted',
       items: issueItems,
-      remarks,
+      remarks: finalRemarks,
       createdBy: state.activeUser.name,
       createdAt: new Date().toISOString()
     };
@@ -133,7 +155,7 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = ({ state, set
         storeId,
         storeName: storeObj?.name || 'Main Store',
         departmentId,
-        departmentName: deptObj?.name,
+        departmentName: deptObj?.name || 'Department',
         inwardQty: 0,
         outwardQty: outwardQty,
         runningQty: newQty,
@@ -183,6 +205,8 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = ({ state, set
       return newState;
     });
 
+    // Feature 4: Trigger Gate Pass modal preview
+    setGatePassItem(newIssue);
     setShowNew(false);
   };
 
@@ -404,11 +428,25 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = ({ state, set
                     <td className="p-3 font-mono text-slate-400">{iss.issueDate}</td>
                     <td className="p-3 text-slate-200">{iss.departmentId}</td>
                     <td className="p-3 text-slate-300">{iss.requestedBy}</td>
-                    <td className="p-3 text-slate-400">{iss.machineJob || 'General Consumption'}</td>
+                    <td className="p-3 text-slate-400">
+                      <div>{iss.machineJob || 'General Consumption'}</div>
+                      {iss.remarks && iss.remarks.includes('[DUAL') && (
+                        <div className="text-[10px] text-amber-400 font-semibold">{iss.remarks}</div>
+                      )}
+                    </td>
                     <td className="p-3 text-center">
                       <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 font-bold text-[10px] border border-cyan-500/30">
                         {iss.status}
                       </span>
+                    </td>
+                    <td className="p-3 text-right">
+                      <button
+                        onClick={() => setGatePassItem(iss)}
+                        className="px-2.5 py-1 bg-slate-850 hover:bg-slate-750 text-emerald-400 border border-slate-700 hover:border-emerald-900 rounded text-[10px] font-bold transition flex items-center gap-1 ml-auto"
+                      >
+                        <Ticket className="w-3 h-3" />
+                        <span>Gate Pass</span>
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -417,6 +455,222 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = ({ state, set
           </table>
         </div>
       </div>
+
+      {/* Feature 8: Supervisor Pin Authorization Dialog (Double Signature) */}
+      {showPinModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl animate-in zoom-in-95">
+            <div className="flex items-center gap-2 text-amber-400">
+               <Lock className="w-5 h-5" />
+               <h3 className="text-sm font-black text-slate-100">Supervisor Co-Signature Needed</h3>
+            </div>
+            <p className="text-xs text-slate-300">
+              This Material Issue exceeds the **₹25,000 High-Value Threshold** and requires dual authorized co-signing.
+            </p>
+
+            <div className="space-y-3 p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <div>
+                <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Supervisor Name</label>
+                <input
+                  type="text"
+                  value={coSignerName}
+                  onChange={e => setCoSignerName(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-100"
+                />
+              </div>
+              <div>
+                <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Authorization Security PIN</label>
+                <input
+                  type="password"
+                  placeholder="Enter 4-Digit Security PIN (Default: 1234)"
+                  value={pinInput}
+                  onChange={e => setPinInput(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 text-center font-mono tracking-widest"
+                />
+              </div>
+              {pinError && (
+                <div className="text-[10px] text-rose-400 font-semibold text-center">{pinError}</div>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPinModal(false);
+                  setPinInput('');
+                  setPinError('');
+                }}
+                className="flex-1 py-1.5 bg-slate-800 text-slate-300 rounded-lg text-xs"
+              >
+                Cancel Post
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (pinInput === '1234') {
+                    setShowPinModal(false);
+                    executePosting(coSignerName);
+                    setPinInput('');
+                    setPinError('');
+                  } else {
+                    setPinError('Invalid Supervisor PIN! Access Denied.');
+                  }
+                }}
+                className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Co-Sign & Post</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Feature 4: Printable Gate Pass Ticket Dialog */}
+      {gatePassItem && (
+        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-xl w-full space-y-4 shadow-2xl animate-in zoom-in-95 my-8">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Ticket className="w-5 h-5 text-emerald-400" />
+                <div>
+                  <h3 className="text-sm font-bold text-slate-100">Gate Pass Dispatch Generator</h3>
+                  <p className="text-[10px] text-slate-400">Generate authorization slips for security checks at warehouse gates</p>
+                </div>
+              </div>
+              <button onClick={() => setGatePassItem(null)} className="text-xs text-slate-400 hover:text-slate-200">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Settings inside gatepass */}
+            <div className="flex gap-4 p-3 bg-slate-950 rounded-xl border border-slate-850">
+              <div className="flex-1">
+                <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Gate Pass Type</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setGatePassType('Returnable')}
+                    className={`flex-1 py-1 rounded text-xs font-bold transition ${
+                      gatePassType === 'Returnable' ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-slate-400'
+                    }`}
+                  >
+                     Returnable (External Repair/Processing)
+                  </button>
+                  <button
+                    onClick={() => setGatePassType('Non-Returnable')}
+                    className={`flex-1 py-1 rounded text-xs font-bold transition ${
+                      gatePassType === 'Non-Returnable' ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-slate-400'
+                    }`}
+                  >
+                     Non-Returnable (Scrap/Disposal/Plant)
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Gate Pass Print Mockout Layout */}
+            <div className="p-6 bg-white text-slate-950 rounded-xl border border-slate-200 space-y-4 shadow-inner relative font-sans">
+              <div className="flex justify-between items-start border-b-2 border-slate-900 pb-3">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Warehouse Dispatch Security Division</span>
+                  <h2 className="text-sm font-black text-slate-900">YAJUR FIBRES & TEXTILES LTD</h2>
+                  <p className="text-[9px] text-slate-500">Central Warehouse Block A, Industrial Zone, West Bengal</p>
+                </div>
+                <div className="text-right">
+                  <div className="px-2 py-0.5 rounded text-[10px] font-bold border-2 border-slate-900 inline-block uppercase text-slate-900">
+                    {gatePassType} PASS
+                  </div>
+                  <p className="text-[10px] font-mono font-bold text-slate-700 mt-1">GP #{gatePassItem.issueNo.replace('MIN', 'GP')}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px] border-b border-slate-100 pb-3">
+                <div>Date: <strong className="text-slate-900">{gatePassItem.issueDate}</strong></div>
+                <div>Linked MIN Ref: <strong className="text-slate-900">{gatePassItem.issueNo}</strong></div>
+                <div>Issued To: <strong className="text-slate-900">{gatePassItem.departmentId}</strong></div>
+                <div>Purpose / Machine: <strong className="text-slate-900">{gatePassItem.machineJob || 'General Maintenance'}</strong></div>
+                <div>Carrier Name: <strong className="text-slate-900">Internal Material Handler</strong></div>
+                <div>Authorized Handover: <strong className="text-slate-900">{gatePassItem.issuedBy}</strong></div>
+              </div>
+
+              {/* Items List */}
+              <div className="space-y-1.5">
+                <div className="text-[10px] font-black uppercase text-slate-400 border-b border-slate-200 pb-1">Authorized Items for Gate Exit</div>
+                <table className="w-full text-left text-[11px]">
+                  <thead>
+                    <tr className="border-b border-slate-100 font-bold text-slate-600">
+                      <th>Code</th>
+                      <th>Item Description</th>
+                      <th className="text-right">Dispatch Qty</th>
+                      <th className="text-right">UOM</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {gatePassItem.items.map((line: any, idx: number) => {
+                      const actualItem = state.items.find(it => it.id === line.itemId);
+                      return (
+                        <tr key={idx} className="border-b border-slate-50">
+                          <td className="font-mono font-bold py-1">{actualItem?.itemCode || 'SKU'}</td>
+                          <td className="py-1">{actualItem?.itemName || 'Item Description'}</td>
+                          <td className="text-right font-bold py-1">{line.issueQty}</td>
+                          <td className="text-right font-mono text-slate-600 py-1">{line.unit}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Simulated QR Check and Signatures */}
+              <div className="flex justify-between items-center pt-3 border-t-2 border-dashed border-slate-300 font-sans">
+                <div className="flex items-center gap-2">
+                  {/* QR Code Graphic Block */}
+                  <div className="w-10 h-10 bg-slate-950 p-1 rounded border border-slate-300 flex flex-col gap-0.5 select-none shrink-0">
+                    <div className="flex-1 flex gap-0.5">
+                      <div className="w-2 bg-white" /><div className="flex-1 bg-slate-950" /><div className="w-2 bg-white" />
+                    </div>
+                    <div className="flex-1 flex gap-0.5">
+                      <div className="flex-1 bg-slate-950" /><div className="w-2 bg-white" /><div className="flex-1 bg-slate-950" />
+                    </div>
+                    <div className="flex-1 flex gap-0.5">
+                      <div className="w-2 bg-white" /><div className="flex-1 bg-slate-950" /><div className="w-2 bg-white" />
+                    </div>
+                  </div>
+                  <div className="text-[9px] text-slate-500 max-w-[150px] leading-tight">
+                    Scan QR at Gate Checkpoint to verify signature hash and authorize dispatch exit.
+                  </div>
+                </div>
+
+                <div className="text-right space-y-2">
+                  <div className="text-[9px] text-slate-400">Security Gate Guard / Authority</div>
+                  <div className="w-32 border-b border-slate-400 h-1 inline-block" />
+                  <div className="text-[9px] font-bold text-slate-700 italic">Signature / Seal Verified</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setGatePassItem(null)}
+                className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded-lg text-xs"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setGatePassPrinted(true);
+                  window.print();
+                }}
+                className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Print / PDF Dispatch Pass</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

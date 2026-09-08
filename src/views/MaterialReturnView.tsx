@@ -19,7 +19,8 @@ export const MaterialReturnView: React.FC<MaterialReturnViewProps> = ({ state, s
 
   const handlePostReturn = (e: React.FormEvent) => {
     e.preventDefault();
-    const item = state.items.find(i => i.id === itemId);
+    const activeItemId = itemId || state.items[0]?.id;
+    const item = state.items.find(i => i.id === activeItemId);
     if (!item) return;
 
     const returnNo = `MRN-2026-${String(state.materialReturns.length + 101).padStart(3, '0')}`;

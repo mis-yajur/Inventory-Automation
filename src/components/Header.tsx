@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Search, Scan, Bell, Building2, HelpCircle,
-  AlertTriangle, CheckCircle2
+  AlertTriangle, CheckCircle2, Keyboard
 } from 'lucide-react';
 import { AppState } from '../services/store';
 
@@ -25,7 +25,20 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const unreadAlerts = state.alerts.filter(a => !a.read);
+
+  // Feature 5: Listen for Alt+H to trigger Keyboard Shortcuts dialog
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && e.key.toLowerCase() === 'h') {
+        e.preventDefault();
+        setShowShortcuts(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleStoreChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setState(prev => ({
@@ -63,18 +76,7 @@ export const Header: React.FC<HeaderProps> = ({
           </select>
         </div>
 
-        {/* Sync Status Badge */}
-        {state.isFirebaseSynced ? (
-          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950 border border-emerald-900 text-emerald-700 text-xs font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-            <span>Firebase Firestore Synced</span>
-          </div>
-        ) : (
-          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 text-xs font-medium">
-            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            <span>Connecting to Firestore...</span>
-          </div>
-        )}
+
       </div>
 
       {/* Middle section: Search & Scanner */}
@@ -104,6 +106,16 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right section: Utilities, Notifications, User */}
       <div className="flex items-center gap-2">
+        {/* Keyboard Shortcuts Button */}
+        <button
+          onClick={() => setShowShortcuts(true)}
+          className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 text-xs bg-slate-950 hover:bg-slate-800 text-slate-400 rounded-lg border border-slate-800 transition"
+          title="Keyboard Shortcuts Guide (Alt+H)"
+        >
+          <Keyboard className="w-3.5 h-3.5 text-cyan-500" />
+          <span>Hotkeys</span>
+        </button>
+
         {/* Developer API Docs Button */}
         <button
           onClick={onOpenApiDocs}
@@ -113,6 +125,7 @@ export const Header: React.FC<HeaderProps> = ({
           <HelpCircle className="w-3.5 h-3.5 text-emerald-600" />
           <span>API Docs</span>
         </button>
+
 
         {/* Notifications Dropdown */}
         <div className="relative">
@@ -207,6 +220,56 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Feature 5: Keyboard Shortcuts Modal Overlay */}
+      {showShortcuts && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-md w-full space-y-4 shadow-2xl animate-in zoom-in-95 text-left">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-slate-100 flex items-center gap-1.5">
+                <Keyboard className="w-4 h-4 text-cyan-400" />
+                <span>Feature 5: Keyboard Shortcuts Guide</span>
+              </h3>
+              <button onClick={() => setShowShortcuts(false)} className="text-xs text-slate-400 hover:text-slate-200">Close</button>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-xs text-slate-400">Boost your warehouse dispatch and posting speed with instant global system shortcuts:</p>
+              
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-slate-800/50">
+                  <span className="text-slate-300 font-medium">Toggle Shortcut Guide</span>
+                  <kbd className="px-2 py-0.5 bg-slate-800 text-cyan-400 rounded text-[10px] font-mono font-bold border border-slate-700">Alt + H</kbd>
+                </div>
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-slate-800/50">
+                  <span className="text-slate-300 font-medium">Trigger Global Master Search</span>
+                  <kbd className="px-2 py-0.5 bg-slate-800 text-cyan-400 rounded text-[10px] font-mono font-bold border border-slate-700">⌘ + K</kbd>
+                </div>
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-slate-800/50">
+                  <span className="text-slate-300 font-medium">Open Virtual Barcode Scanner</span>
+                  <kbd className="px-2 py-0.5 bg-slate-800 text-cyan-400 rounded text-[10px] font-mono font-bold border border-slate-700">Alt + S</kbd>
+                </div>
+                <div className="flex items-center justify-between text-xs py-1.5 border-b border-slate-800/50">
+                  <span className="text-slate-300 font-medium">Print Current Barcode Label</span>
+                  <kbd className="px-2 py-0.5 bg-slate-800 text-cyan-400 rounded text-[10px] font-mono font-bold border border-slate-700">Ctrl + P</kbd>
+                </div>
+                <div className="flex items-center justify-between text-xs py-1.5">
+                  <span className="text-slate-300 font-medium">Close Modal / Escape drawer</span>
+                  <kbd className="px-2 py-0.5 bg-slate-800 text-cyan-400 rounded text-[10px] font-mono font-bold border border-slate-700">ESC</kbd>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowShortcuts(false)}
+              className="w-full py-2 bg-slate-800 hover:bg-slate-750 text-slate-200 rounded-lg text-xs font-bold transition mt-2"
+            >
+              Acknowledge & Continue
+            </button>
+          </div>
+        </div>
+      )}
     </header>
+
   );
 };

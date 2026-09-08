@@ -264,7 +264,7 @@ export const App: React.FC = () => {
             state={state}
             onSelectItem={setSelectedItemForView}
             onEditItem={handleEditItem}
-            onCreateNew={handleCreateNewItem}
+            onOpenAddItem={handleCreateNewItem}
           />
         );
       case 'categories':

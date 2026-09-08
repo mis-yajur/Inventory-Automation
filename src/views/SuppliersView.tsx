@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Truck, Plus, Phone, Mail, Clock } from 'lucide-react';
+import { Truck, Plus, Phone, Mail, Clock, ShieldAlert, Award, TrendingUp } from 'lucide-react';
 import { AppState } from '../services/store';
 import { Supplier } from '../types';
 
@@ -16,6 +16,21 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ state, setState })
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [leadTime, setLeadTime] = useState(7);
+  const [rating, setRating] = useState(4.8);
+
+  // Feature 5: Supplier Quality & Fulfillment Incident Log state
+  const [incidents, setIncidents] = useState<Record<string, number>>({
+    'SUP-001': 1,
+    'SUP-002': 0,
+    'SUP-003': 3,
+  });
+
+  const handleLogIncident = (supplierCode: string) => {
+    setIncidents(prev => ({
+      ...prev,
+      [supplierCode]: (prev[supplierCode] || 0) + 1
+    }));
+  };
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,8 +46,11 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ state, setState })
       address: 'Industrial Zone',
       leadTimeDays: leadTime,
       preferred: true,
-      active: true
-    };
+      active: true,
+      // Store rating score
+      rating: rating
+    } as any;
+
 
     setState(prev => ({
       ...prev,
@@ -105,11 +123,21 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ state, setState })
               onChange={e => setEmail(e.target.value)}
               className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100"
             />
-            <input
+             <input
               type="number"
               placeholder="Lead Time (Days)"
               value={leadTime}
               onChange={e => setLeadTime(parseInt(e.target.value))}
+              className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100"
+            />
+            <input
+              type="number"
+              step="0.1"
+              min="1"
+              max="5"
+              placeholder="SLA Rating (1.0 - 5.0)"
+              value={rating}
+              onChange={e => setRating(parseFloat(e.target.value))}
               className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100"
             />
           </div>
@@ -121,26 +149,85 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ state, setState })
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {state.suppliers.map(sup => (
-          <div key={sup.id} className="p-4 bg-slate-900 border border-slate-800 rounded-2xl space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-emerald-400 font-bold text-xs">{sup.code}</span>
-              <span className="flex items-center gap-1 text-[11px] font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
-                <Clock className="w-3 h-3" /> {sup.leadTimeDays} Days Lead
-              </span>
-            </div>
+        {state.suppliers.map(sup => {
+          const score = (sup as any).rating || (sup.preferred ? 4.9 : 4.4);
+          const variance = sup.leadTimeDays > 10 ? '±1.5d var' : '±0.5d var';
+          const supplierIncidents = incidents[sup.code] || 0;
+          const fillRate = Math.max(45, 99.5 - (supplierIncidents * 6.5));
 
-            <div>
-              <h3 className="font-bold text-sm text-slate-100">{sup.name}</h3>
-              <p className="text-xs text-slate-400">Contact: <strong className="text-slate-200">{sup.contactPerson}</strong></p>
-            </div>
+          return (
+            <div key={sup.id} className="p-4 bg-slate-900 border border-slate-800 rounded-2xl space-y-3 flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-emerald-400 font-bold text-xs">{sup.code}</span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="flex items-center gap-1 text-[11px] font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
+                      <Clock className="w-3 h-3" /> {sup.leadTimeDays} Days Lead
+                    </span>
+                    <span className="text-[9px] text-slate-500 font-mono">{variance}</span>
+                  </div>
+                </div>
 
-            <div className="space-y-1.5 text-xs text-slate-400 pt-2 border-t border-slate-800">
-              <div className="flex items-center gap-2"><Phone className="w-3 h-3 text-slate-500" /><span>{sup.phone}</span></div>
-              <div className="flex items-center gap-2"><Mail className="w-3 h-3 text-slate-500" /><span>{sup.email}</span></div>
+                <div>
+                  <h3 className="font-bold text-sm text-slate-100">{sup.name}</h3>
+                  <p className="text-xs text-slate-400">Contact: <strong className="text-slate-200">{sup.contactPerson}</strong></p>
+                  
+                  {/* Feature 8: Rating Score Indicator */}
+                  <div className="flex items-center gap-1 mt-1.5">
+                    <span className="text-[10px] text-slate-400 font-medium">SLA Performance:</span>
+                    <div className="flex items-center text-amber-400 font-mono font-bold text-[11px]">
+                      ★ {score.toFixed(1)}
+                    </div>
+                    <span className="text-[10px] text-slate-500">/ 5.0</span>
+                  </div>
+
+                  {/* Feature 5 (Fulfillment Fill Rate Tracking Indicator) */}
+                  <div className="mt-2.5 p-2 bg-slate-950/60 rounded-xl border border-slate-800/80 space-y-1">
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="text-slate-400 font-semibold flex items-center gap-1">
+                        <Award className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Fulfillment OTIF Rate:</span>
+                      </span>
+                      <span className={`font-mono font-bold ${fillRate >= 90 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {fillRate.toFixed(1)}%
+                      </span>
+                    </div>
+                    {/* Visual Progress Bar */}
+                    <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-300 ${fillRate >= 90 ? 'bg-emerald-500' : 'bg-rose-500'}`} 
+                        style={{ width: `${fillRate}%` }} 
+                      />
+                    </div>
+                    {supplierIncidents > 0 && (
+                      <div className="text-[9px] text-rose-400 flex items-center gap-1 mt-0.5 font-semibold">
+                        <ShieldAlert className="w-3 h-3 text-rose-500 shrink-0" />
+                        <span>{supplierIncidents} SLA Incidents Logged</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 text-xs text-slate-400 pt-2 border-t border-slate-800">
+                  <div className="flex items-center gap-2"><Phone className="w-3 h-3 text-slate-500" /><span>{sup.phone}</span></div>
+                  <div className="flex items-center gap-2"><Mail className="w-3 h-3 text-slate-500" /><span>{sup.email}</span></div>
+                </div>
+              </div>
+
+              {/* Log Incident Button */}
+              <div className="pt-2 border-t border-slate-800/40">
+                <button
+                  type="button"
+                  onClick={() => handleLogIncident(sup.code)}
+                  className="w-full py-1 bg-slate-800 hover:bg-rose-950/40 text-slate-300 hover:text-rose-400 border border-slate-700/60 hover:border-rose-900/60 rounded text-[10px] font-bold transition flex items-center justify-center gap-1.5"
+                >
+                  <ShieldAlert className="w-3 h-3" />
+                  <span>Log SLA Deviation / Defect</span>
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
