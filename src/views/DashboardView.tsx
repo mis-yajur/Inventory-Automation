@@ -151,6 +151,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
  
         <div className="flex items-center gap-2">
+          {(criticalCount > 0 || outOfStockCount > 0) && (
+            <button
+              onClick={() => onNavigateTab('reorder_management')}
+              className="px-3.5 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-lg shadow-rose-900/20 shrink-0 animate-pulse"
+            >
+              <AlertTriangle className="w-4 h-4" />
+              <span>Review Reorders ({criticalCount + outOfStockCount})</span>
+            </button>
+          )}
           <button
             onClick={() => onNavigateTab('stock_in')}
             className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-emerald-950 shrink-0"
@@ -167,33 +176,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </button>
         </div>
       </div>
-
-      {/* Critical Reorder Action Alert Banner */}
-      {(criticalCount > 0 || outOfStockCount > 0) && (
-        <div className="p-4 bg-rose-50 border-l-4 border-rose-500 rounded-r-2xl flex items-center justify-between gap-4 shadow-lg animate-in slide-in-from-top-2 print:hidden">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 shadow-inner">
-              <AlertTriangle className="w-6 h-6 animate-bounce" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-sm font-black text-rose-900 uppercase tracking-tight">
-                Action Required: Stock Shortage Exception Triggered
-              </h3>
-              <p className="text-sm text-rose-800/90 font-medium">
-                <strong className="text-rose-950 underline decoration-rose-300 decoration-2">{criticalCount} critical items</strong> are below safety stock cover and <strong className="text-rose-950 underline decoration-rose-300 decoration-2">{outOfStockCount} items</strong> are completely out of stock.
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => onNavigateTab('reorder_management')}
-            className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-black transition flex items-center gap-2 shrink-0 shadow-xl shadow-rose-900/20 active:scale-95"
-          >
-            <span>Review Reorder List</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
