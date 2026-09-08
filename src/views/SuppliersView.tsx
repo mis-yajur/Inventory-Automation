@@ -4,6 +4,7 @@ import { AppState, saveStateToStorage } from '../services/store';
 import { Supplier } from '../types';
 import { SUPPLIERS_TEMPLATE, downloadCsvTemplate } from '../utils/csvTemplates';
 import { BulkGenericMasterModal } from '../components/BulkGenericMasterModal';
+import { ConfirmationModal } from '../components/ConfirmationModal';
 
 interface SuppliersViewProps {
   state: AppState;
@@ -23,6 +24,7 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ state, setState })
   const [rating, setRating] = useState(4.8);
   const [searchTerm, setSearchTerm] = useState('');
   const [showGuide, setShowGuide] = useState(false);
+  const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
 
   const [incidents, setIncidents] = useState<Record<string, number>>({
     'SUP-001': 1,
@@ -108,16 +110,20 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ state, setState })
   };
 
   const handleDelete = (sup: Supplier) => {
-    if (window.confirm(`Are you sure you want to delete supplier "${sup.name}"?`)) {
-      setState(prev => {
-        const updated = {
-          ...prev,
-          suppliers: prev.suppliers.filter(s => s.id !== sup.id)
-        };
-        saveStateToStorage(updated);
-        return updated;
-      });
-    }
+    setSupplierToDelete(sup);
+  };
+
+  const confirmDeleteSupplier = () => {
+    if (!supplierToDelete) return;
+    setState(prev => {
+      const updated = {
+        ...prev,
+        suppliers: prev.suppliers.filter(s => s.id !== supplierToDelete.id)
+      };
+      saveStateToStorage(updated);
+      return updated;
+    });
+    setSupplierToDelete(null);
   };
 
   const handleBulkImportSuppliers = (rows: Record<string, string>[]) => {
@@ -466,6 +472,16 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ state, setState })
         template={SUPPLIERS_TEMPLATE}
         entityName="Suppliers"
         onImportData={handleBulkImportSuppliers}
+      />
+
+      <ConfirmationModal
+        isOpen={!!supplierToDelete}
+        title="Delete Supplier"
+        message={`Are you sure you want to delete supplier "${supplierToDelete?.name}" (${supplierToDelete?.code})?`}
+        confirmLabel="Delete Supplier"
+        variant="danger"
+        onConfirm={confirmDeleteSupplier}
+        onCancel={() => setSupplierToDelete(null)}
       />
     </div>
   );

@@ -4,6 +4,7 @@ import { AppState, saveStateToStorage } from '../services/store';
 import { Department } from '../types';
 import { DEPARTMENTS_TEMPLATE, downloadCsvTemplate } from '../utils/csvTemplates';
 import { BulkGenericMasterModal } from '../components/BulkGenericMasterModal';
+import { ConfirmationModal } from '../components/ConfirmationModal';
 
 interface DepartmentsViewProps {
   state: AppState;
@@ -20,6 +21,8 @@ export const DepartmentsView: React.FC<DepartmentsViewProps> = ({ state, setStat
   const [costCentre, setCostCentre] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showGuide, setShowGuide] = useState(false);
+  const [deptToDelete, setDeptToDelete] = useState<Department | null>(null);
+  const [deptError, setDeptError] = useState<string | null>(null);
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,20 +77,24 @@ export const DepartmentsView: React.FC<DepartmentsViewProps> = ({ state, setStat
   const handleDelete = (dept: Department) => {
     const usageCount = state.ledger.filter(l => l.departmentId === dept.id).length;
     if (usageCount > 0) {
-      alert(`Cannot delete department "${dept.name}" because it has ${usageCount} transaction records.`);
+      setDeptError(`Cannot delete department "${dept.name}" because it has ${usageCount} transaction records.`);
+      setTimeout(() => setDeptError(null), 5000);
       return;
     }
+    setDeptToDelete(dept);
+  };
 
-    if (window.confirm(`Are you sure you want to delete the department "${dept.name}"?`)) {
-      setState(prev => {
-        const updated = {
-          ...prev,
-          departments: prev.departments.filter(d => d.id !== dept.id)
-        };
-        saveStateToStorage(updated);
-        return updated;
-      });
-    }
+  const confirmDeleteDepartment = () => {
+    if (!deptToDelete) return;
+    setState(prev => {
+      const updated = {
+        ...prev,
+        departments: prev.departments.filter(d => d.id !== deptToDelete.id)
+      };
+      saveStateToStorage(updated);
+      return updated;
+    });
+    setDeptToDelete(null);
   };
 
   const handleBulkImportDepartments = (rows: Record<string, string>[]) => {
@@ -150,6 +157,14 @@ export const DepartmentsView: React.FC<DepartmentsViewProps> = ({ state, setStat
 
   return (
     <div className="space-y-6">
+      {/* Error notification */}
+      {deptError && (
+        <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl text-xs flex items-center justify-between">
+          <span>{deptError}</span>
+          <button onClick={() => setDeptError(null)} className="text-rose-400 hover:text-white font-bold ml-2">✕</button>
+        </div>
+      )}
+
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-sm">
         <div className="flex items-center gap-4">
@@ -373,6 +388,16 @@ export const DepartmentsView: React.FC<DepartmentsViewProps> = ({ state, setStat
         template={DEPARTMENTS_TEMPLATE}
         entityName="Departments"
         onImportData={handleBulkImportDepartments}
+      />
+
+      <ConfirmationModal
+        isOpen={!!deptToDelete}
+        title="Delete Department"
+        message={`Are you sure you want to delete department "${deptToDelete?.name}" (${deptToDelete?.code})?`}
+        confirmLabel="Delete Department"
+        variant="danger"
+        onConfirm={confirmDeleteDepartment}
+        onCancel={() => setDeptToDelete(null)}
       />
     </div>
   );

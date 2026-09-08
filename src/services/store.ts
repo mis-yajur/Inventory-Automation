@@ -23,16 +23,30 @@ export const DUMMY_ITEM_NAMES = new Set([
 
 export function isDummyItem(item: any): boolean {
   if (!item) return false;
-  if (typeof item.id === 'string' && /^itm-(1[0-2]|[1-9])$/.test(item.id)) return true;
-  if (typeof item.itemCode === 'string' && DUMMY_ITEM_CODES.has(item.itemCode.toUpperCase().trim())) return true;
-  if (typeof item.itemName === 'string' && DUMMY_ITEM_NAMES.has(item.itemName.toLowerCase().trim())) return true;
+  const id = String(item.id || '').toLowerCase().trim();
+  const code = String(item.itemCode || '').toUpperCase().trim();
+  const name = String(item.itemName || '').toLowerCase().trim();
+
+  if (/^itm-([1-9]|1[0-2])$/.test(id)) return true;
+  if (/^itm-00(0[1-9]|1[0-2])$/.test(code)) return true;
+  if (DUMMY_ITEM_CODES.has(code)) return true;
+  if (DUMMY_ITEM_NAMES.has(name)) return true;
+  for (const dummyName of DUMMY_ITEM_NAMES) {
+    if (name === dummyName || name.startsWith(dummyName)) return true;
+  }
   return false;
 }
 
 export function isDummyLedgerEntry(entry: any): boolean {
   if (!entry) return false;
-  if (typeof entry.id === 'string' && /^led-[1-6]$/.test(entry.id)) return true;
-  if (typeof entry.itemCode === 'string' && DUMMY_ITEM_CODES.has(entry.itemCode.toUpperCase().trim())) return true;
+  const id = String(entry.id || '').toLowerCase().trim();
+  const code = String(entry.itemCode || '').toUpperCase().trim();
+  const itemId = String(entry.itemId || '').toLowerCase().trim();
+
+  if (/^led-[1-6]$/.test(id)) return true;
+  if (id.startsWith('led-open-itm-') || id.includes('itm-')) return true;
+  if (/^itm-([1-9]|1[0-2])$/.test(itemId)) return true;
+  if (DUMMY_ITEM_CODES.has(code)) return true;
   return false;
 }
 
@@ -155,7 +169,7 @@ export function loadInitialState(): AppState {
       const rawSuppliers = Array.isArray(parsed.suppliers) ? parsed.suppliers : initialSuppliers;
       const cleanSuppliers = rawSuppliers.filter((s: any) => !s.id || !/^sup-[1-3]$/.test(s.id));
 
-      return {
+      const cleanedState: AppState = {
         items: cleanItems,
         categories: cleanCategories,
         units: parsed.units || initialUnits,
@@ -179,6 +193,16 @@ export function loadInitialState(): AppState {
         isFirebaseSynced: true,
         plugins: parsed.plugins || []
       };
+
+      if (rawItems.length !== cleanItems.length || rawLedger.length !== cleanLedger.length) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanedState));
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      return cleanedState;
     }
   } catch (err) {
     console.error('Failed to load local storage state:', err);

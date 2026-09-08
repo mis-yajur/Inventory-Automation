@@ -4,6 +4,7 @@ import { AppState, saveStateToStorage } from '../services/store';
 import { Category } from '../types';
 import { CATEGORIES_TEMPLATE, downloadCsvTemplate } from '../utils/csvTemplates';
 import { BulkGenericMasterModal } from '../components/BulkGenericMasterModal';
+import { ConfirmationModal } from '../components/ConfirmationModal';
 
 interface CategoriesViewProps {
   state: AppState;
@@ -19,6 +20,8 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({ state, setState 
   const [description, setDescription] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showGuide, setShowGuide] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,20 +74,24 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({ state, setState 
   const handleDelete = (cat: Category) => {
     const itemCount = state.items.filter(i => i.categoryId === cat.id).length;
     if (itemCount > 0) {
-      alert(`Cannot delete category "${cat.name}" because it contains ${itemCount} items. Move or reassign items first.`);
+      setCategoryError(`Cannot delete category "${cat.name}" because it contains ${itemCount} items. Move or reassign items first.`);
+      setTimeout(() => setCategoryError(null), 5000);
       return;
     }
+    setCategoryToDelete(cat);
+  };
 
-    if (window.confirm(`Are you sure you want to delete the category "${cat.name}"?`)) {
-      setState(prev => {
-        const updated = {
-          ...prev,
-          categories: prev.categories.filter(c => c.id !== cat.id)
-        };
-        saveStateToStorage(updated);
-        return updated;
-      });
-    }
+  const confirmDeleteCategory = () => {
+    if (!categoryToDelete) return;
+    setState(prev => {
+      const updated = {
+        ...prev,
+        categories: prev.categories.filter(c => c.id !== categoryToDelete.id)
+      };
+      saveStateToStorage(updated);
+      return updated;
+    });
+    setCategoryToDelete(null);
   };
 
   const handleBulkImportCategories = (rows: Record<string, string>[]) => {
@@ -129,6 +136,12 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({ state, setState 
   return (
     <div className="space-y-6">
       {/* Header Bar */}
+      {categoryError && (
+        <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl text-xs flex items-center justify-between">
+          <span>{categoryError}</span>
+          <button onClick={() => setCategoryError(null)} className="text-rose-400 hover:text-white font-bold ml-2">✕</button>
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-sm">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-inner">
@@ -348,6 +361,16 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({ state, setState 
         template={CATEGORIES_TEMPLATE}
         entityName="Categories"
         onImportData={handleBulkImportCategories}
+      />
+
+      <ConfirmationModal
+        isOpen={!!categoryToDelete}
+        title="Delete Category"
+        message={`Are you sure you want to delete category "${categoryToDelete?.name}" (${categoryToDelete?.code})?`}
+        confirmLabel="Delete Category"
+        variant="danger"
+        onConfirm={confirmDeleteCategory}
+        onCancel={() => setCategoryToDelete(null)}
       />
     </div>
   );

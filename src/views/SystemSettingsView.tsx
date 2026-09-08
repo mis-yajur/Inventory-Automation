@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Settings, UploadCloud, Loader2, Trash2, RotateCcw, ShieldAlert, Sparkles, FileSpreadsheet } from 'lucide-react';
-import { AppState, initialCategories, initialDepartments, initialUsers, initialUnits, initialStores, initialSuppliers, STORAGE_KEY } from '../services/store';
+import { Settings, UploadCloud, Loader2, Trash2, RotateCcw, Sparkles, FileSpreadsheet, CheckCircle2 } from 'lucide-react';
+import { AppState, initialCategories, initialDepartments, initialUsers, initialUnits, initialStores, initialSuppliers, STORAGE_KEY, isDummyItem, isDummyLedgerEntry } from '../services/store';
 import { useCsvParser } from '../hooks/useCsvParser';
 import { purgeLegacyDummyDataFromFirebase } from '../services/syncManager';
+import { ConfirmationModal } from '../components/ConfirmationModal';
 
 interface SystemSettingsViewProps {
   state: AppState;
@@ -14,6 +15,9 @@ export const SystemSettingsView: React.FC<SystemSettingsViewProps> = ({ state, s
   const { parseCsv, isParsing, error } = useCsvParser();
   const [isPurging, setIsPurging] = useState(false);
   const [purgeStatus, setPurgeStatus] = useState<string | null>(null);
+  const [showPurgeModal, setShowPurgeModal] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [importNotification, setImportNotification] = useState<string | null>(null);
 
   const handleFileSelect = (type: 'items' | 'units' | 'departments') => (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -25,30 +29,36 @@ export const SystemSettingsView: React.FC<SystemSettingsViewProps> = ({ state, s
           if (type === 'departments') return { ...prev, departments: [...prev.departments, ...newRecords] };
           return prev;
         });
-        alert(`Successfully imported ${newRecords.length} ${type}!`);
+        setImportNotification(`Successfully imported ${newRecords.length} ${type}!`);
+        setTimeout(() => setImportNotification(null), 4000);
       });
     }
   };
 
   const handlePurgeDummyData = async () => {
-    if (!window.confirm('This will purge all legacy dummy sample items (ITM-0001 to ITM-0012) and their test ledger entries permanently. Proceed?')) {
-      return;
-    }
-
+    setShowPurgeModal(false);
     setIsPurging(true);
-    setPurgeStatus('Purging dummy data from cloud & local storage...');
+    setPurgeStatus('Purging all dummy data from cloud & local storage...');
     try {
       await purgeLegacyDummyDataFromFirebase();
       
-      setState(prev => ({
-        ...prev,
-        items: prev.items.filter(i => !/^itm-[1-9]|itm-1[0-2]$/.test(i.id)),
-        ledger: prev.ledger.filter(l => !/^led-[1-6]$/.test(l.id)),
-        alerts: prev.alerts.filter(a => !/^alt-[1-5]$/.test(a.id)),
-        auditLogs: prev.auditLogs.filter(al => !/^aud-[1-4]$/.test(al.id))
-      }));
+      setState(prev => {
+        const cleanState: AppState = {
+          ...prev,
+          items: prev.items.filter(i => !isDummyItem(i)),
+          ledger: prev.ledger.filter(l => !isDummyLedgerEntry(l)),
+          alerts: prev.alerts.filter(a => !a.id || !/^alt-[1-5]$/.test(a.id)),
+          auditLogs: prev.auditLogs.filter(al => !al.id || !/^aud-[1-4]$/.test(al.id))
+        };
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanState));
+        } catch (e) {
+          // ignore
+        }
+        return cleanState;
+      });
 
-      setPurgeStatus('All dummy data successfully purged! System is 100% clean.');
+      setPurgeStatus('All dummy items and dummy transactions have been permanently deleted! Database is 100% clean.');
     } catch (err: any) {
       setPurgeStatus(`Purge error: ${err.message || 'Unknown error'}`);
     } finally {
@@ -57,49 +67,52 @@ export const SystemSettingsView: React.FC<SystemSettingsViewProps> = ({ state, s
   };
 
   const handleFactoryReset = () => {
-    if (window.confirm('CRITICAL: This will reset the system to a clean production state with ZERO dummy items and zero dummy transactions. Proceed?')) {
-      const newState: AppState = {
-        ...state,
-        items: [],
-        categories: initialCategories,
-        units: initialUnits,
-        departments: initialDepartments,
-        stores: initialStores,
-        suppliers: initialSuppliers,
-        ledger: [],
-        stockInReceipts: [],
-        materialIssues: [],
-        materialReturns: [],
-        stockTransfers: [],
-        stockAdjustments: [],
-        monthlyClosings: [],
-        alerts: [],
-        auditLogs: [
-          {
-            id: `aud-${Date.now()}`,
-            timestamp: new Date().toISOString(),
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            userId: state.activeUser.id,
-            userName: state.activeUser.name,
-            module: 'System Administration',
-            action: 'RESET',
-            record: 'ALL_DATA',
-            previousValue: 'Existing Data',
-            newValue: 'CLEAN_SLATE',
-            reason: 'System reset to clean production state'
-          }
-        ],
-        users: initialUsers,
-        activeStoreId: state.stores[0]?.id || 'str-1',
-        isOfflineMode: false,
-        isFirebaseSynced: true
-      };
-      
-      setState(newState);
-      localStorage.removeItem(STORAGE_KEY);
+    setShowResetModal(false);
+    const newState: AppState = {
+      ...state,
+      items: [],
+      categories: initialCategories,
+      units: initialUnits,
+      departments: initialDepartments,
+      stores: initialStores,
+      suppliers: initialSuppliers,
+      ledger: [],
+      stockInReceipts: [],
+      materialIssues: [],
+      materialReturns: [],
+      stockTransfers: [],
+      stockAdjustments: [],
+      monthlyClosings: [],
+      alerts: [],
+      auditLogs: [
+        {
+          id: `aud-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          userId: state.activeUser.id,
+          userName: state.activeUser.name,
+          module: 'System Administration',
+          action: 'RESET',
+          record: 'ALL_DATA',
+          previousValue: 'Existing Data',
+          newValue: 'CLEAN_SLATE',
+          reason: 'System reset to clean production state'
+        }
+      ],
+      users: initialUsers,
+      activeStoreId: state.stores[0]?.id || 'str-1',
+      isOfflineMode: false,
+      isFirebaseSynced: true
+    };
+    
+    setState(newState);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
       localStorage.removeItem('ims_automation_yajur_data_v1');
-      alert('System has been reset to a completely clean, zero-dummy production state.');
+    } catch (e) {
+      // ignore
     }
+    setPurgeStatus('System has been reset to a completely clean, zero-dummy production state.');
   };
 
   return (
@@ -177,6 +190,13 @@ export const SystemSettingsView: React.FC<SystemSettingsViewProps> = ({ state, s
           </h3>
           <p className="text-xs text-slate-400">Manage dummy data cleanup and reset system state to a pristine live production condition.</p>
           
+          {importNotification && (
+            <div className="p-3 bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 rounded-xl text-xs flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>{importNotification}</span>
+            </div>
+          )}
+
           {purgeStatus && (
             <div className="p-3 bg-emerald-950/50 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 font-semibold">
               {purgeStatus}
@@ -185,17 +205,17 @@ export const SystemSettingsView: React.FC<SystemSettingsViewProps> = ({ state, s
 
           <div className="flex flex-wrap gap-4">
             <button 
-              onClick={handlePurgeDummyData}
+              onClick={() => setShowPurgeModal(true)}
               disabled={isPurging}
-              className="flex items-center gap-2 px-4 py-2.5 bg-amber-950/40 border border-amber-800/50 hover:bg-amber-900/40 text-amber-300 rounded-xl text-xs font-bold transition shadow-lg shadow-amber-950/20 disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2.5 bg-amber-950/40 border border-amber-800/50 hover:bg-amber-900/40 text-amber-300 rounded-xl text-xs font-bold transition shadow-lg shadow-amber-950/20 disabled:opacity-50 cursor-pointer"
             >
               {isPurging ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               <span>Purge Legacy Dummy Data from Database</span>
             </button>
 
             <button 
-              onClick={handleFactoryReset}
-              className="flex items-center gap-2 px-4 py-2.5 bg-rose-950/40 border border-rose-900/50 hover:bg-rose-900/40 text-rose-400 rounded-xl text-xs font-bold transition shadow-lg shadow-rose-950/20"
+              onClick={() => setShowResetModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-rose-950/40 border border-rose-900/50 hover:bg-rose-900/40 text-rose-400 rounded-xl text-xs font-bold transition shadow-lg shadow-rose-950/20 cursor-pointer"
             >
               <RotateCcw className="w-4 h-4" />
               <span>Reset to Clean Live State (Zero Dummy Items)</span>
@@ -203,6 +223,27 @@ export const SystemSettingsView: React.FC<SystemSettingsViewProps> = ({ state, s
           </div>
         </section>
       </div>
+
+      <ConfirmationModal
+        isOpen={showPurgeModal}
+        title="Purge Legacy Dummy Data"
+        message="This will permanently delete all legacy sample items (Bearing 6205, Seal 45mm, etc.) and all test opening stock ledger entries from both Cloud Firestore and local storage. Your real uploaded inventory and masters will be safely retained."
+        confirmLabel="Purge All Dummy Data"
+        variant="warning"
+        isLoading={isPurging}
+        onConfirm={handlePurgeDummyData}
+        onCancel={() => setShowPurgeModal(false)}
+      />
+
+      <ConfirmationModal
+        isOpen={showResetModal}
+        title="Reset to Clean Production State"
+        message="This will clear all inventory items, ledger transactions, receipts, and issue records to start with a completely empty, clean slate ready for official company data. Master categories, units, and departments will remain intact."
+        confirmLabel="Reset to Clean State"
+        variant="danger"
+        onConfirm={handleFactoryReset}
+        onCancel={() => setShowResetModal(false)}
+      />
     </div>
   );
 };

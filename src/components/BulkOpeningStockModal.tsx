@@ -46,14 +46,16 @@ export const BulkOpeningStockModal: React.FC<BulkOpeningStockModalProps> = ({
   const [parsedRows, setParsedRows] = useState<ParsedOpeningRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
   const parseCsvText = (text: string) => {
+    setErrorMessage(null);
     const lines = text.trim().split(/\r?\n/);
     if (lines.length < 2) {
-      alert('The uploaded content does not contain data rows. Please check the file.');
+      setErrorMessage('The uploaded content does not contain data rows. Please check the file.');
       return;
     }
 
@@ -201,7 +203,7 @@ export const BulkOpeningStockModal: React.FC<BulkOpeningStockModalProps> = ({
 
     const validRows = parsedRows.filter(r => r.isValid);
     if (validRows.length === 0) {
-      alert('No valid rows found to import. Please correct the errors.');
+      setErrorMessage('No valid rows found to import. Please correct the errors.');
       return;
     }
 
@@ -439,6 +441,13 @@ export const BulkOpeningStockModal: React.FC<BulkOpeningStockModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-6 flex-1">
+          {errorMessage && (
+            <div className="p-3 bg-rose-950/60 border border-rose-500/40 text-rose-300 rounded-xl text-xs flex items-center justify-between">
+              <span>{errorMessage}</span>
+              <button onClick={() => setErrorMessage(null)} className="text-rose-400 hover:text-white font-bold ml-2">✕</button>
+            </div>
+          )}
+
           {activeTab === 'upload' && (
             <div className="space-y-4">
               <div

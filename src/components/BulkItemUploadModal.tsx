@@ -64,6 +64,7 @@ export const BulkItemUploadModal: React.FC<BulkItemUploadModalProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [fileName, setFileName] = useState('');
   const [showGuide, setShowGuide] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   
   // Options
   const [autoCreateCategories, setAutoCreateCategories] = useState(true);
@@ -311,11 +312,12 @@ export const BulkItemUploadModal: React.FC<BulkItemUploadModalProps> = ({
         skipEmptyLines: true,
         complete: (results) => {
           setIsProcessing(false);
+          setUploadError(null);
           parseRawRecords(results.data);
         },
         error: (err) => {
           setIsProcessing(false);
-          alert(`Failed to parse CSV file: ${err.message}`);
+          setUploadError(`Failed to parse CSV file: ${err.message}`);
         }
       });
     }
@@ -331,11 +333,12 @@ export const BulkItemUploadModal: React.FC<BulkItemUploadModalProps> = ({
       skipEmptyLines: true,
       complete: (results) => {
         setIsProcessing(false);
+        setUploadError(null);
         parseRawRecords(results.data);
       },
       error: (err) => {
         setIsProcessing(false);
-        alert(`Failed to parse text: ${err.message}`);
+        setUploadError(`Failed to parse text: ${err.message}`);
       }
     });
   };
@@ -343,7 +346,7 @@ export const BulkItemUploadModal: React.FC<BulkItemUploadModalProps> = ({
   const handleExecuteImport = () => {
     const validRows = parsedRows.filter(r => r.isValid);
     if (validRows.length === 0) {
-      alert('No valid rows found to import.');
+      setUploadError('No valid rows found to import. Please check data errors.');
       return;
     }
 
@@ -589,6 +592,13 @@ export const BulkItemUploadModal: React.FC<BulkItemUploadModalProps> = ({
 
         {/* Content Area */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-5 flex-1">
+          {uploadError && (
+            <div className="p-3 bg-rose-950/60 border border-rose-500/40 text-rose-300 rounded-xl text-xs flex items-center justify-between">
+              <span>{uploadError}</span>
+              <button onClick={() => setUploadError(null)} className="text-rose-400 hover:text-white font-bold ml-2">✕</button>
+            </div>
+          )}
+
           {/* Quick Guidance banner */}
           <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-2.5">

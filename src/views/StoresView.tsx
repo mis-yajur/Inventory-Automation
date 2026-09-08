@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Warehouse, Plus, MapPin, User, Grid, ClipboardCheck, Sparkles, AlertCircle, Edit2, Trash2 } from 'lucide-react';
 import { AppState } from '../services/store';
 import { Store } from '../types';
+import { ConfirmationModal } from '../components/ConfirmationModal';
 
 interface StoresViewProps {
   state: AppState;
@@ -15,6 +16,8 @@ export const StoresView: React.FC<StoresViewProps> = ({ state, setState }) => {
   const [name, setName] = useState('');
   const [person, setPerson] = useState('');
   const [location, setLocation] = useState('');
+  const [storeToDelete, setStoreToDelete] = useState<Store | null>(null);
+  const [storeError, setStoreError] = useState<string | null>(null);
 
   // States for Feature 2 & 3
   const [selectedBin, setSelectedBin] = useState<string | null>(null);
@@ -72,16 +75,20 @@ export const StoresView: React.FC<StoresViewProps> = ({ state, setState }) => {
   const handleDelete = (store: Store) => {
     const itemCount = state.items.filter(i => i.defaultStoreId === store.id).length;
     if (itemCount > 0) {
-      alert(`Cannot delete store "${store.name}" because it contains ${itemCount} items. Transfer stock first.`);
+      setStoreError(`Cannot delete store "${store.name}" because it contains ${itemCount} items. Transfer stock first.`);
+      setTimeout(() => setStoreError(null), 5000);
       return;
     }
+    setStoreToDelete(store);
+  };
 
-    if (window.confirm(`Are you sure you want to delete store "${store.name}"?`)) {
-      setState(prev => ({
-        ...prev,
-        stores: prev.stores.filter(s => s.id !== store.id)
-      }));
-    }
+  const confirmDeleteStore = () => {
+    if (!storeToDelete) return;
+    setState(prev => ({
+      ...prev,
+      stores: prev.stores.filter(s => s.id !== storeToDelete.id)
+    }));
+    setStoreToDelete(null);
   };
 
   const handleScheduleAudit = (e: React.FormEvent) => {
@@ -119,6 +126,13 @@ export const StoresView: React.FC<StoresViewProps> = ({ state, setState }) => {
 
   return (
     <div className="space-y-6">
+      {storeError && (
+        <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl text-xs flex items-center justify-between">
+          <span>{storeError}</span>
+          <button onClick={() => setStoreError(null)} className="text-rose-400 hover:text-white font-bold ml-2">✕</button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-black text-slate-100 flex items-center gap-2">
@@ -435,6 +449,16 @@ export const StoresView: React.FC<StoresViewProps> = ({ state, setState }) => {
           </div>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={!!storeToDelete}
+        title="Delete Store Location"
+        message={`Are you sure you want to delete warehouse store "${storeToDelete?.name}" (${storeToDelete?.code})?`}
+        confirmLabel="Delete Store"
+        variant="danger"
+        onConfirm={confirmDeleteStore}
+        onCancel={() => setStoreToDelete(null)}
+      />
     </div>
   );
 };

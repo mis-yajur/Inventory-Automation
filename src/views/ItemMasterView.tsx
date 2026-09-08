@@ -7,6 +7,7 @@ import {
 import { AppState } from '../services/store';
 import { Item } from '../types';
 import { formatCurrency, getItemInventoryStatus } from '../utils/calculations';
+import { ConfirmationModal } from '../components/ConfirmationModal';
 
 interface ItemMasterViewProps {
   state: AppState;
@@ -27,6 +28,7 @@ export const ItemMasterView: React.FC<ItemMasterViewProps> = ({
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [selectedStatus, setSelectedStatus] = useState('ALL');
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [itemToDelete, setItemToDelete] = useState<Item | null>(null);
 
   const filteredItems = state.items.filter(item => {
     const matchesSearch =
@@ -295,13 +297,9 @@ export const ItemMasterView: React.FC<ItemMasterViewProps> = ({
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => {
-                                if (window.confirm(`Are you sure you want to delete ${item.itemName}? This action cannot be undone.`)) {
-                                  onDeleteItem(item.id);
-                                }
-                              }}
+                              onClick={() => setItemToDelete(item)}
                               title="Delete Item"
-                              className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-rose-500 transition"
+                              className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-rose-500 transition cursor-pointer"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -361,12 +359,8 @@ export const ItemMasterView: React.FC<ItemMasterViewProps> = ({
                     Edit
                   </button>
                   <button
-                    onClick={() => {
-                      if (window.confirm(`Are you sure you want to delete ${item.itemName}?`)) {
-                        onDeleteItem(item.id);
-                      }
-                    }}
-                    className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-500 rounded-lg text-xs font-semibold transition border border-slate-700"
+                    onClick={() => setItemToDelete(item)}
+                    className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-500 rounded-lg text-xs font-semibold transition border border-slate-700 cursor-pointer"
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4 mx-auto" />
@@ -377,6 +371,21 @@ export const ItemMasterView: React.FC<ItemMasterViewProps> = ({
           })}
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={!!itemToDelete}
+        title="Delete Item Record"
+        message={`Are you sure you want to permanently delete "${itemToDelete?.itemName}" (${itemToDelete?.itemCode})? This will remove the item from active catalogs.`}
+        confirmLabel="Delete Item"
+        variant="danger"
+        onConfirm={() => {
+          if (itemToDelete) {
+            onDeleteItem(itemToDelete.id);
+            setItemToDelete(null);
+          }
+        }}
+        onCancel={() => setItemToDelete(null)}
+      />
     </div>
   );
 };

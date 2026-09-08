@@ -4,6 +4,7 @@ import { AppState, saveStateToStorage } from '../services/store';
 import { Unit } from '../types';
 import { UNITS_TEMPLATE, downloadCsvTemplate } from '../utils/csvTemplates';
 import { BulkGenericMasterModal } from '../components/BulkGenericMasterModal';
+import { ConfirmationModal } from '../components/ConfirmationModal';
 
 interface UnitsViewProps {
   state: AppState;
@@ -19,6 +20,8 @@ export const UnitsView: React.FC<UnitsViewProps> = ({ state, setState }) => {
   const [decimalAllowed, setDecimalAllowed] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showGuide, setShowGuide] = useState(false);
+  const [unitToDelete, setUnitToDelete] = useState<Unit | null>(null);
+  const [unitError, setUnitError] = useState<string | null>(null);
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,20 +74,24 @@ export const UnitsView: React.FC<UnitsViewProps> = ({ state, setState }) => {
   const handleDelete = (unit: Unit) => {
     const itemCount = state.items.filter(i => i.unitId === unit.id).length;
     if (itemCount > 0) {
-      alert(`Cannot delete unit "${unit.code}" because it is assigned to ${itemCount} items. Move or reassign items first.`);
+      setUnitError(`Cannot delete unit "${unit.code}" because it is assigned to ${itemCount} items. Move or reassign items first.`);
+      setTimeout(() => setUnitError(null), 5000);
       return;
     }
+    setUnitToDelete(unit);
+  };
 
-    if (window.confirm(`Are you sure you want to delete the unit "${unit.code}"?`)) {
-      setState(prev => {
-        const updated = {
-          ...prev,
-          units: prev.units.filter(u => u.id !== unit.id)
-        };
-        saveStateToStorage(updated);
-        return updated;
-      });
-    }
+  const confirmDeleteUnit = () => {
+    if (!unitToDelete) return;
+    setState(prev => {
+      const updated = {
+        ...prev,
+        units: prev.units.filter(u => u.id !== unitToDelete.id)
+      };
+      saveStateToStorage(updated);
+      return updated;
+    });
+    setUnitToDelete(null);
   };
 
   const handleBulkImportUnits = (rows: Record<string, string>[]) => {
@@ -128,6 +135,13 @@ export const UnitsView: React.FC<UnitsViewProps> = ({ state, setState }) => {
 
   return (
     <div className="space-y-6">
+      {unitError && (
+        <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl text-xs flex items-center justify-between">
+          <span>{unitError}</span>
+          <button onClick={() => setUnitError(null)} className="text-rose-400 hover:text-white font-bold ml-2">✕</button>
+        </div>
+      )}
+
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-sm">
         <div className="flex items-center gap-4">
@@ -364,6 +378,16 @@ export const UnitsView: React.FC<UnitsViewProps> = ({ state, setState }) => {
         template={UNITS_TEMPLATE}
         entityName="Units"
         onImportData={handleBulkImportUnits}
+      />
+
+      <ConfirmationModal
+        isOpen={!!unitToDelete}
+        title="Delete Unit of Measurement"
+        message={`Are you sure you want to delete unit "${unitToDelete?.name}" (${unitToDelete?.code})?`}
+        confirmLabel="Delete Unit"
+        variant="danger"
+        onConfirm={confirmDeleteUnit}
+        onCancel={() => setUnitToDelete(null)}
       />
     </div>
   );

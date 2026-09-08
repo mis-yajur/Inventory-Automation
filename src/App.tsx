@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { loadInitialState, saveStateToStorage, AppState } from './services/store';
+import { loadInitialState, saveStateToStorage, AppState, isDummyItem, isDummyLedgerEntry } from './services/store';
 import { Item, ViewType, StockLedgerEntry } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -12,7 +12,7 @@ import { ApiDocModal } from './components/ApiDocModal';
 import { Lock } from 'lucide-react';
 
 import { isCollectionEmpty, COLLECTIONS, auth } from './services/firebase';
-import { seedInitialStateToFirebase, hydrateStateFromFirebase, syncStateDiffToFirebase } from './services/syncManager';
+import { seedInitialStateToFirebase, hydrateStateFromFirebase, syncStateDiffToFirebase, purgeLegacyDummyDataFromFirebase } from './services/syncManager';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, User } from 'firebase/auth';
 
 import { DashboardView } from './views/DashboardView';
@@ -56,6 +56,7 @@ export const App: React.FC = () => {
   const [selectedItemForEdit, setSelectedItemForEdit] = useState<Item | null>(null);
   const [isItemFormOpen, setIsItemFormOpen] = useState(false);
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<{ message: string; type: 'info' | 'error' | 'success' } | null>(null);
 
   const prevStateRef = useRef<AppState>(state);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -138,18 +139,34 @@ export const App: React.FC = () => {
         setIsSyncing(true);
         setState(prev => ({ ...prev, isFirebaseSynced: false }));
         
+        // Purge dummy sample data from Firestore automatically
+        await purgeLegacyDummyDataFromFirebase();
+        
         const isEmpty = await isCollectionEmpty(COLLECTIONS.items);
         if (isEmpty) {
-          console.log('Firebase Firestore is empty. Seeding initial state...');
-          await seedInitialStateToFirebase(state);
-          setState(prev => ({ ...prev, isFirebaseSynced: true }));
+          console.log('Firebase Firestore is ready for production inventory.');
+          setState(prev => {
+            const clean = {
+              ...prev,
+              items: prev.items.filter(i => !isDummyItem(i)),
+              ledger: prev.ledger.filter(l => !isDummyLedgerEntry(l)),
+              isFirebaseSynced: true
+            };
+            saveStateToStorage(clean);
+            prevStateRef.current = clean;
+            return clean;
+          });
         } else {
           console.log('Firebase Firestore has data. Hydrating state...');
           const hydratedData = await hydrateStateFromFirebase();
           setState(prev => {
+            const cleanItems = (hydratedData.items || prev.items || []).filter(i => !isDummyItem(i));
+            const cleanLedger = (hydratedData.ledger || prev.ledger || []).filter(l => !isDummyLedgerEntry(l));
             const updated = {
               ...prev,
               ...hydratedData,
+              items: cleanItems,
+              ledger: cleanLedger,
               settings: hydratedData.settings ? { ...prev.settings, ...hydratedData.settings } : prev.settings,
               isFirebaseSynced: true
             };
@@ -423,7 +440,11 @@ export const App: React.FC = () => {
     if (match) {
       setSelectedItemForView(match);
     } else {
-      alert(`Scanned Barcode [${code}] not found in Item Master catalog.`);
+      setToastMessage({
+        message: `Scanned Barcode [${code}] not found in Item Master catalog.`,
+        type: 'error'
+      });
+      setTimeout(() => setToastMessage(null), 5000);
     }
     setIsScannerOpen(false);
   };
@@ -641,6 +662,26 @@ export const App: React.FC = () => {
         isOpen={isApiDocOpen}
         onClose={() => setIsApiDocOpen(false)} 
       />
+
+      {toastMessage && (
+        <div className="fixed bottom-5 right-5 z-50 animate-in fade-in slide-in-from-bottom-5">
+          <div className={`p-4 rounded-xl shadow-2xl border flex items-center gap-3 max-w-md ${
+            toastMessage.type === 'error'
+              ? 'bg-rose-950/95 border-rose-800 text-rose-200'
+              : toastMessage.type === 'success'
+              ? 'bg-emerald-950/95 border-emerald-800 text-emerald-200'
+              : 'bg-slate-900/95 border-slate-700 text-slate-200'
+          }`}>
+            <span className="text-sm font-medium">{toastMessage.message}</span>
+            <button
+              onClick={() => setToastMessage(null)}
+              className="text-slate-400 hover:text-white font-bold ml-auto cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -8,6 +8,7 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianG
 import { AppState } from '../services/store';
 import { StockLedgerEntry, Item } from '../types';
 import { formatCurrency } from '../utils/calculations';
+import { ConfirmationModal } from '../components/ConfirmationModal';
 
 interface StockLedgerViewProps {
   state: AppState;
@@ -27,6 +28,7 @@ export const StockLedgerView: React.FC<StockLedgerViewProps> = ({ state, onRever
   
   // Sorting
   const [sortBy, setSortBy] = useState<'date_asc' | 'date_desc' | 'qty_in_desc' | 'qty_out_desc' | 'balance_desc' | 'val_desc'>('date_desc');
+  const [entryToReverse, setEntryToReverse] = useState<StockLedgerEntry | null>(null);
 
   // Quick Date Presets
   const handleDatePreset = (preset: 'today' | 'week' | 'this_month' | 'last_month' | 'quarter' | 'financial_year' | 'all') => {
@@ -78,9 +80,14 @@ export const StockLedgerView: React.FC<StockLedgerViewProps> = ({ state, onRever
   };
 
   const handleReverseClick = (entry: StockLedgerEntry) => {
-    if (window.confirm(`Are you sure you want to REVERSE this transaction (${entry.referenceNumber})? This will create an offsetting entry.`)) {
-      if (onReverse) onReverse(entry);
+    setEntryToReverse(entry);
+  };
+
+  const confirmReversal = () => {
+    if (entryToReverse && onReverse) {
+      onReverse(entryToReverse);
     }
+    setEntryToReverse(null);
   };
 
   // Selected item object (if a single item is picked)
@@ -765,6 +772,16 @@ export const StockLedgerView: React.FC<StockLedgerViewProps> = ({ state, onRever
           </table>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={!!entryToReverse}
+        title="Reverse Ledger Transaction"
+        message={`Are you sure you want to reverse transaction "${entryToReverse?.referenceNumber}" (${entryToReverse?.transactionType} - ${entryToReverse?.itemName})? This will create an offsetting journal entry.`}
+        confirmLabel="Reverse Transaction"
+        variant="warning"
+        onConfirm={confirmReversal}
+        onCancel={() => setEntryToReverse(null)}
+      />
     </div>
   );
 };
