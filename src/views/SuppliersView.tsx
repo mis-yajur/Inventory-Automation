@@ -222,7 +222,7 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ state, setState })
                   <span className="font-mono text-emerald-400 font-bold text-xs">{sup.code}</span>
                   <div className="flex flex-col items-end gap-1">
                     <div className="flex items-center gap-1">
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-1 transition-opacity">
                         <button 
                           onClick={() => startEdit(sup)}
                           className="p-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700"

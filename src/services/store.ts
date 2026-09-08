@@ -852,6 +852,10 @@ export const initialSettings: CompanySettings = {
   deadStockDays: 365,
   consumptionSpikeThreshold: 30,
   quantityPrecision: 2,
+  valuePrecision: 2,
+  financialYear: '2026-27',
+  defaultLeadTime: 7,
+  ageingBands: ['0-30', '31-60', '61-90', '90+'],
   monthlyCloseLock: true,
   darkMode: true
 };

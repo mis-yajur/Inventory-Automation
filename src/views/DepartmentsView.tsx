@@ -323,7 +323,7 @@ export const DepartmentsView: React.FC<DepartmentsViewProps> = ({ state, setStat
             <h3 className="font-bold text-sm text-slate-100">{dept.name}</h3>
             <p className="text-xs text-slate-400">Head: <strong className="text-slate-200">{dept.departmentHead}</strong></p>
             
-            <div className="absolute bottom-4 right-4 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute bottom-4 right-4 flex gap-1.5 transition-opacity">
               <button 
                 onClick={() => startEdit(dept)}
                 className="p-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-lg border border-slate-700 shadow-xl"

@@ -356,7 +356,6 @@ export interface CompanySettings {
   valuePrecision: number;
   financialYear: string;
   defaultLeadTime: number;
-  defaultSafetyFactor: number;
   ageingBands: string[];
   monthlyCloseLock: boolean;
   darkMode: boolean;

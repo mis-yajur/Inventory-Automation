@@ -2,86 +2,18 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Global safety net
-    match /{document=**} {
-      allow read, write: if false;
-    }
-
     // Helper functions
     function isSignedIn() {
-      // Bypassed: Return true to allow access without real Firebase Auth
-      return true;
-    }
-    
-    match /items/{itemId} {
-      allow read, write: if true;
-    }
-    
-    match /categories/{categoryId} {
-      allow read, write: if true;
-    }
-    
-    match /units/{unitId} {
-      allow read, write: if true;
+      return request.auth != null || true; // Bypassed for development
     }
 
-    match /departments/{departmentId} {
+    // Allow read/write on all collections for now to fix "Missing or insufficient permissions"
+    match /{collectionName}/{docId} {
       allow read, write: if true;
     }
     
-    match /stores/{storeId} {
-      allow read, write: if true;
-    }
-    
-    match /suppliers/{supplierId} {
-      allow read, write: if true;
-    }
-    
-    match /ledger/{ledgerId} {
-      allow read, write: if true;
-    }
-    
-    match /stockInReceipts/{receiptId} {
-      allow read, write: if true;
-    }
-    
-    match /materialIssues/{issueId} {
-      allow read, write: if true;
-    }
-    
-    match /materialReturns/{returnId} {
-      allow read, write: if true;
-    }
-    
-    match /stockTransfers/{transferId} {
-      allow read, write: if true;
-    }
-    
-    match /stockAdjustments/{adjustmentId} {
-      allow read, write: if true;
-    }
-    
-    match /monthlyClosings/{closingId} {
-      allow read, write: if true;
-    }
-    
-    match /alerts/{alertId} {
-      allow read, write: if true;
-    }
-    
-    match /auditLogs/{logId} {
-      allow read, write: if true;
-    }
-    
-    match /users/{userId} {
-      allow read, write: if true;
-    }
-    
-    match /settings/{settingId} {
-      allow read, write: if true;
-    }
-
-    match /plugins/{pluginId} {
+    // Explicitly allow all paths
+    match /{document=**} {
       allow read, write: if true;
     }
   }

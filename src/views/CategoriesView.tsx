@@ -148,7 +148,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({ state, setState 
                 <span className="font-mono text-emerald-400 text-xs font-bold">{cat.code}</span>
                 <h3 className="font-bold text-sm text-slate-100">{cat.name}</h3>
                 <p className="text-xs text-slate-400 mt-0.5">{cat.description || 'General category'}</p>
-                <div className="flex items-center gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-2 mt-3 transition-opacity">
                   <button 
                     onClick={() => startEdit(cat)}
                     className="p-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-lg transition border border-slate-700"

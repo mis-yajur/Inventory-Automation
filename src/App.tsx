@@ -439,7 +439,6 @@ export const App: React.FC = () => {
         return (
           <ItemMasterView
             state={state}
-            onSelectItem={setSelectedItemForView}
             onEditItem={handleEditItem}
             onDeleteItem={handleDeleteItem}
             onOpenAddItem={handleCreateNewItem}

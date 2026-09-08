@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Package, Plus, Search, Filter, Download, Scan, SlidersHorizontal,
-  Edit2, Eye, Shield, AlertTriangle, Layers, Grid, List, Printer, HelpCircle,
+  Edit2, Shield, AlertTriangle, Layers, Grid, List, HelpCircle,
   Trash2
 } from 'lucide-react';
 import { AppState } from '../services/store';
@@ -13,21 +13,18 @@ interface ItemMasterViewProps {
   onOpenAddItem: () => void;
   onEditItem: (item: Item) => void;
   onDeleteItem: (itemId: string) => void;
-  onSelectItem: (item: Item) => void;
 }
 
 export const ItemMasterView: React.FC<ItemMasterViewProps> = ({
   state,
   onOpenAddItem,
   onEditItem,
-  onDeleteItem,
-  onSelectItem
+  onDeleteItem
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [selectedStatus, setSelectedStatus] = useState('ALL');
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
-  const [printingItem, setPrintingItem] = useState<Item | null>(null);
 
   const filteredItems = state.items.filter(item => {
     const matchesSearch =
@@ -256,20 +253,6 @@ export const ItemMasterView: React.FC<ItemMasterViewProps> = ({
                         <td className="p-3 text-right">
                           <div className="flex items-center justify-end gap-1">
                             <button
-                              onClick={() => setPrintingItem(item)}
-                              title="Print Barcode Tag"
-                              className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-amber-400 transition"
-                            >
-                              <Printer className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => onSelectItem(item)}
-                              title="Inspect Item"
-                              className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-emerald-400 transition"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button
                               onClick={() => onEditItem(item)}
                               title="Edit Master"
                               className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-cyan-400 transition"
@@ -337,21 +320,8 @@ export const ItemMasterView: React.FC<ItemMasterViewProps> = ({
 
                 <div className="flex gap-2 pt-2 border-t border-slate-800">
                   <button
-                    onClick={() => onSelectItem(item)}
-                    className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold transition"
-                  >
-                    Inspect 360°
-                  </button>
-                  <button
-                    onClick={() => setPrintingItem(item)}
-                    className="px-3 py-1.5 bg-slate-805 hover:bg-slate-700 text-amber-400 rounded-lg text-xs font-semibold transition border border-slate-700"
-                    title="Print Barcode"
-                  >
-                    <Printer className="w-4 h-4" />
-                  </button>
-                  <button
                     onClick={() => onEditItem(item)}
-                    className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-lg text-xs font-semibold transition border border-slate-700"
+                    className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-lg text-xs font-semibold transition border border-slate-700"
                   >
                     Edit
                   </button>
@@ -361,69 +331,15 @@ export const ItemMasterView: React.FC<ItemMasterViewProps> = ({
                         onDeleteItem(item.id);
                       }
                     }}
-                    className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-500 rounded-lg text-xs font-semibold transition border border-slate-700"
+                    className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-500 rounded-lg text-xs font-semibold transition border border-slate-700"
                     title="Delete"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4 mx-auto" />
                   </button>
                 </div>
               </div>
             );
           })}
-        </div>
-      )}
-
-      {/* Feature 1: Printable Barcode Tag Preview Overlay */}
-      {printingItem && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl animate-in zoom-in-95">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-sm font-bold text-slate-100 flex items-center gap-1.5">
-                <Printer className="w-4 h-4 text-emerald-400" />
-                <span>Feature 1: On-Demand Barcode Label</span>
-              </h3>
-              <button onClick={() => setPrintingItem(null)} className="text-xs text-slate-400 hover:text-slate-200">Close</button>
-            </div>
-
-            <div className="p-4 bg-white text-slate-950 rounded-xl space-y-3 flex flex-col items-center text-center shadow-lg border border-slate-200">
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Yajur Fibres & Textiles Ltd</span>
-              <div className="font-bold text-sm text-slate-900 leading-tight">{printingItem.itemName}</div>
-              <div className="text-[11px] font-semibold text-slate-600 font-mono">Code: {printingItem.itemCode}</div>
-
-              {/* Faux printable barcode lines */}
-              <div className="py-2.5 px-4 bg-slate-50 rounded flex flex-col items-center">
-                <div className="flex items-center gap-0.5 h-10 select-none">
-                  {[2,3,1,4,2,1,3,2,4,1,2,3,1,4,2,1,3,2,4,1,2].map((w, i) => (
-                    <div key={i} className="bg-slate-950" style={{ width: `${w}px`, height: '100%' }} />
-                  ))}
-                </div>
-                <span className="text-[9px] font-mono tracking-widest text-slate-700 mt-1">{printingItem.itemCode}-2026</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-[10px] w-full pt-1 border-t border-slate-100 text-slate-500">
-                <div>Rack: <strong className="text-slate-900">{printingItem.rack || 'A1'}</strong></div>
-                <div>Bin: <strong className="text-slate-900">{printingItem.bin || 'B1'}</strong></div>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => setPrintingItem(null)}
-                className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded-lg text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  window.print();
-                }}
-                className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span>Print Label</span>
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>

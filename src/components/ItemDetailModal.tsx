@@ -2,7 +2,7 @@ import React from 'react';
 import {
   X, Package, Shield, AlertTriangle, Layers, MapPin, Truck,
   History, Calendar, ArrowDownLeft, ArrowUpRight, BarChart2,
-  TrendingUp, TrendingDown, Printer, Download, Search
+  TrendingUp, TrendingDown, Printer, Download, Search, Activity
 } from 'lucide-react';
 import { AppState } from '../services/store';
 import { Item } from '../types';

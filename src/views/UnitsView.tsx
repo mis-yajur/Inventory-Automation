@@ -265,7 +265,6 @@ export const UnitsView: React.FC<UnitsViewProps> = ({ state, setState }) => {
                   {/* Drag-and-drop container */}
                   <div className="flex flex-col">
                     <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Drag & Drop CSV/TXT File</span>
-{error && <div className="text-rose-500 text-xs mb-2">{error}</div>}
                     <div
                       onDragEnter={handleDrag}
                       onDragOver={handleDrag}
@@ -309,7 +308,7 @@ export const UnitsView: React.FC<UnitsViewProps> = ({ state, setState }) => {
             <span className="text-xs font-semibold text-slate-200 mt-1 block">{unit.name}</span>
             <span className="text-[10px] text-slate-500 mt-1 block">Decimals: {unit.decimalAllowed ? 'Yes' : 'No'}</span>
             
-            <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute top-1 right-1 flex flex-col gap-1 transition-opacity">
               <button 
                 onClick={() => startEdit(unit)}
                 className="p-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700 shadow-lg"
