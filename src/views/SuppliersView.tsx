@@ -442,24 +442,9 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ state, setState })
       </div>
 
       {filteredSuppliers.length === 0 && (
-        <div className="p-12 text-center text-slate-500 bg-slate-900 border border-slate-800 rounded-2xl space-y-3">
-          <p className="text-sm">No suppliers found matching your query.</p>
-          <div className="flex justify-center gap-3 pt-2">
-            <button
-              onClick={() => downloadCsvTemplate(SUPPLIERS_TEMPLATE)}
-              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5"
-            >
-              <Download className="w-4 h-4 text-emerald-400" />
-              <span>Download Sample CSV</span>
-            </button>
-            <button
-              onClick={() => setIsBulkModalOpen(true)}
-              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5"
-            >
-              <UploadCloud className="w-4 h-4" />
-              <span>Bulk Upload Suppliers</span>
-            </button>
-          </div>
+        <div className="p-12 text-center text-slate-500 bg-slate-900 border border-slate-800 rounded-2xl space-y-2">
+          <p className="text-sm font-semibold text-slate-300">No suppliers found.</p>
+          <p className="text-xs text-slate-400">Use "Bulk Upload (CSV / Excel)" above to import vendor records, or click "+ Add Supplier" to create a new entry.</p>
         </div>
       )}
 

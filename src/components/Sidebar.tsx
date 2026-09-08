@@ -44,7 +44,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: 'categories', label: 'Categories', icon: Tags },
         { id: 'units', label: 'Units (UOM)', icon: Scale },
         { id: 'departments', label: 'Departments', icon: Network },
-        { id: 'stores', label: 'Stores & Bins', icon: Warehouse },
+        { id: 'stores', label: 'Store', icon: Warehouse },
         { id: 'suppliers', label: 'Suppliers', icon: Truck }
       ]
     },

@@ -210,31 +210,11 @@ export const ItemMasterView: React.FC<ItemMasterViewProps> = ({
                         <h4 className="text-sm font-bold text-slate-200">
                           {state.items.length === 0 ? 'Item Master Catalog is Clean & Live' : 'No matching items found'}
                         </h4>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-slate-400 leading-relaxed">
                           {state.items.length === 0
-                            ? 'Your inventory database is clean and ready for real production items. Use Bulk Upload to import all items at once or create items manually.'
+                            ? 'Your inventory database is clean and ready for production items. Use "Bulk Upload (CSV / Excel)" above to import your catalog, or click "+ Create New Item" to add entries manually.'
                             : 'Try adjusting your search criteria or category filter.'}
                         </p>
-                        {state.items.length === 0 && (
-                          <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
-                            {onOpenBulkUpload && (
-                              <button
-                                onClick={onOpenBulkUpload}
-                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-950"
-                              >
-                                <UploadCloud className="w-4 h-4" />
-                                <span>Bulk Upload Items (CSV/Excel)</span>
-                              </button>
-                            )}
-                            <button
-                              onClick={onOpenAddItem}
-                              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-700"
-                            >
-                              <Plus className="w-4 h-4 text-emerald-400" />
-                              <span>Create First Item</span>
-                            </button>
-                          </div>
-                        )}
                       </div>
                     </td>
                   </tr>
@@ -315,61 +295,79 @@ export const ItemMasterView: React.FC<ItemMasterViewProps> = ({
         </div>
       ) : (
         /* Grid Card View */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredItems.map(item => {
-            const status = getItemInventoryStatus(item);
-            return (
-              <div key={item.id} className="p-4 bg-slate-900 border border-slate-800 rounded-2xl hover:border-slate-700 transition space-y-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="font-mono text-emerald-400 font-bold text-xs">{item.itemCode}</span>
-                    <h3 className="font-bold text-sm text-slate-100">{item.itemName}</h3>
-                    <span className="text-[11px] text-slate-400">{item.categoryName}</span>
-                  </div>
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                    status === 'Critical' ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' :
-                    status === 'Low' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
-                    'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                  }`}>
-                    {status}
-                  </span>
-                </div>
-
-                <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 flex items-center justify-between text-xs">
-                  <div>
-                    <span className="text-[10px] text-slate-400 block">Available Qty</span>
-                    <span className="font-extrabold text-slate-100 text-sm">{item.availableQty} {item.unitName}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] text-slate-400 block">Stock Value</span>
-                    <span className="font-extrabold text-emerald-400 text-sm">{formatCurrency(item.stockValue)}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
-                  <span>Rack: <strong className="text-slate-200">{item.rack || '—'}</strong></span>
-                  <span>Reorder: <strong className="text-rose-400">{item.reorderLevel} {item.unitName}</strong></span>
-                </div>
-
-                <div className="flex gap-2 pt-2 border-t border-slate-800">
-                  <button
-                    onClick={() => onEditItem(item)}
-                    className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-lg text-xs font-semibold transition border border-slate-700"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => setItemToDelete(item)}
-                    className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-500 rounded-lg text-xs font-semibold transition border border-slate-700 cursor-pointer"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4 mx-auto" />
-                  </button>
-                </div>
+        filteredItems.length === 0 ? (
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center shadow-xl">
+            <div className="max-w-md mx-auto space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-slate-800/80 border border-slate-700 text-slate-400 flex items-center justify-center mx-auto">
+                <Package className="w-6 h-6" />
               </div>
-            );
-          })}
-        </div>
+              <h4 className="text-sm font-bold text-slate-200">
+                {state.items.length === 0 ? 'Item Master Catalog is Clean & Live' : 'No matching items found'}
+              </h4>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                {state.items.length === 0
+                  ? 'Your inventory database is clean and ready for production items. Use "Bulk Upload (CSV / Excel)" above to import your catalog, or click "+ Create New Item" to add entries manually.'
+                  : 'Try adjusting your search criteria or category filter.'}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredItems.map(item => {
+              const status = getItemInventoryStatus(item);
+              return (
+                <div key={item.id} className="p-4 bg-slate-900 border border-slate-800 rounded-2xl hover:border-slate-700 transition space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="font-mono text-emerald-400 font-bold text-xs">{item.itemCode}</span>
+                      <h3 className="font-bold text-sm text-slate-100">{item.itemName}</h3>
+                      <span className="text-[11px] text-slate-400">{item.categoryName}</span>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                      status === 'Critical' ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' :
+                      status === 'Low' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                      'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                    }`}>
+                      {status}
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 flex items-center justify-between text-xs">
+                    <div>
+                      <span className="text-[10px] text-slate-400 block">Available Qty</span>
+                      <span className="font-extrabold text-slate-100 text-sm">{item.availableQty} {item.unitName}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] text-slate-400 block">Stock Value</span>
+                      <span className="font-extrabold text-emerald-400 text-sm">{formatCurrency(item.stockValue)}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+                    <span>Rack: <strong className="text-slate-200">{item.rack || '—'}</strong></span>
+                    <span>Reorder: <strong className="text-rose-400">{item.reorderLevel} {item.unitName}</strong></span>
+                  </div>
+
+                  <div className="flex gap-2 pt-2 border-t border-slate-800">
+                    <button
+                      onClick={() => onEditItem(item)}
+                      className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-lg text-xs font-semibold transition border border-slate-700"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => setItemToDelete(item)}
+                      className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-500 rounded-lg text-xs font-semibold transition border border-slate-700 cursor-pointer"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4 mx-auto" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
       )}
 
       <ConfirmationModal
