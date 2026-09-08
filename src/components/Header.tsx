@@ -165,10 +165,10 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
 
               <div className="max-h-80 overflow-y-auto divide-y divide-slate-800">
-                {state.alerts.length === 0 ? (
+                {allAlerts.length === 0 ? (
                   <div className="p-6 text-center text-slate-500 text-xs">No alerts found</div>
                 ) : (
-                  state.alerts.slice(0, 6).map(alert => (
+                  allAlerts.slice(0, 8).map(alert => (
                     <div
                       key={alert.id}
                       onClick={() => {

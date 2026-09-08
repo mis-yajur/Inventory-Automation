@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, BarChart2, DollarSign } from 'lucide-react';
+import { TrendingUp, BarChart2, DollarSign, Printer } from 'lucide-react';
 import { AppState, getMonthlyConsumption } from '../services/store';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '../utils/calculations';
@@ -32,9 +32,15 @@ export const ConsumptionView: React.FC<ConsumptionViewProps> = ({ state }) => {
           <p className="text-xs text-slate-400 mt-0.5">Track departmental material consumption trends, high-consumption SKUs, and cost centre expenses</p>
         </div>
 
-        <div className="p-3 bg-slate-900 border border-slate-800 rounded-2xl flex items-center gap-2">
-          <span className="text-xs text-slate-400 font-semibold">Total Issued Material Expense:</span>
-          <span className="text-sm font-black text-cyan-400 font-mono">{formatCurrency(totalConsumptionValue)}</span>
+        <div className="flex items-center gap-4">
+          <button onClick={() => window.print()} className="px-3 py-2 bg-slate-900 border border-slate-700 hover:border-cyan-500 rounded-lg text-xs font-bold text-slate-300 hover:text-cyan-400 transition flex items-center gap-2 print:hidden">
+            <Printer className="w-4 h-4" />
+            <span className="hidden sm:inline">Print Report</span>
+          </button>
+          <div className="p-3 bg-slate-900 border border-slate-800 rounded-2xl flex items-center gap-2">
+            <span className="text-xs text-slate-400 font-semibold">Total Issued Material Expense:</span>
+            <span className="text-sm font-black text-cyan-400 font-mono">{formatCurrency(totalConsumptionValue)}</span>
+          </div>
         </div>
       </div>
 

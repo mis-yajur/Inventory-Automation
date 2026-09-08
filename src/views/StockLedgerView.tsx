@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, Search, Download, Calendar, Filter } from 'lucide-react';
+import { BookOpen, Search, Download, Calendar, Filter, Printer } from 'lucide-react';
 import { AppState } from '../services/store';
 import { formatCurrency } from '../utils/calculations';
 
