@@ -73,15 +73,18 @@ export const App: React.FC = () => {
     if (e) e.preventDefault();
     setLoginError('');
     
+    const cleanUsername = loginUsername.trim();
+    const cleanPassword = loginPassword.trim();
+    
     let email = '';
     let role = '';
     let name = '';
     
-    if (loginUsername === 'Admin' && loginPassword === 'Admin@1234') {
+    if (cleanUsername === 'Admin' && cleanPassword === 'Admin@1234') {
       email = 'admin@yajurfibres.com';
       role = 'Super Admin';
       name = 'Admin User';
-    } else if (loginUsername === 'User' && loginPassword === 'User@1234') {
+    } else if (cleanUsername === 'User' && cleanPassword === 'User@1234') {
       email = 'user@yajurfibres.com';
       role = 'Store User';
       name = 'Standard User';
@@ -91,20 +94,21 @@ export const App: React.FC = () => {
     }
 
     try {
-      await signInWithEmailAndPassword(auth, email, loginPassword);
+      await signInWithEmailAndPassword(auth, email, cleanPassword);
       updateUserRoleState(email, name, role);
     } catch (error: any) {
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+      // In newer Firebase versions, user-not-found and wrong-password are combined into invalid-credential or invalid-login-credentials
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/invalid-login-credentials') {
         try {
-          await createUserWithEmailAndPassword(auth, email, loginPassword);
+          await createUserWithEmailAndPassword(auth, email, cleanPassword);
           updateUserRoleState(email, name, role);
-        } catch (createError) {
+        } catch (createError: any) {
           console.error('Account creation error:', createError);
-          setLoginError('Could not create account automatically.');
+          setLoginError(createError.message || 'Could not create account automatically.');
         }
       } else {
         console.error('Login error:', error);
-        setLoginError('Authentication failed.');
+        setLoginError(error.message || 'Authentication failed.');
       }
     }
   };
