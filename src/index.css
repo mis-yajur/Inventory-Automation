@@ -1,51 +1,51 @@
 @import "tailwindcss";
 
 @theme {
-  /* Define light slate colors mapped onto the existing slate scale */
-  --color-slate-950: #f8fafc; /* Main application background */
-  --color-slate-900: #ffffff; /* Card backgrounds & container surfaces */
-  --color-slate-800: #f1f5f9; /* Subtle borders & dividers */
-  --color-slate-700: #e2e8f0; /* Standard borders */
+  /* Define warm ivory, soft creams, and lotus charcoal colors mapped onto the slate scale */
+  --color-slate-950: #fbf9f6; /* Ivory/Cream main page background */
+  --color-slate-900: #ffffff; /* Clean white card surfaces */
+  --color-slate-800: #f5f0eb; /* Soft warm-gray dividers */
+  --color-slate-700: #ebdcd5; /* Warm gray borders */
   --color-slate-600: #cbd5e1; /* Secondary borders */
-  --color-slate-500: #64748b; /* Secondary gray labels / inactive tabs */
-  --color-slate-400: #475569; /* Intermediate text labels */
-  --color-slate-300: #334155; /* Secondary text */
-  --color-slate-200: #1e293b; /* Primary body text */
-  --color-slate-100: #0f172a; /* Titles / high-contrast headers */
-  --color-slate-50: #ffffff;  /* Input boxes baseline background */
+  --color-slate-500: #8c7a7d; /* Soft muted plum-gray for labels */
+  --color-slate-400: #5c4d50; /* Intermediate body text */
+  --color-slate-300: #4a3e40; /* Standard high-contrast body text */
+  --color-slate-200: #2e1f21; /* Rich deep plum-burgundy headings */
+  --color-slate-100: #1a0f11; /* Maximum contrast dark maroon titles */
+  --color-slate-50: #fffdfb;  /* Input textareas backdrop */
 
-  /* Define blue colors mapped onto the existing emerald/green scale for blue accenting */
-  --color-emerald-950: #eff6ff; /* Banner highlights / toast backdrops */
-  --color-emerald-900: #dbeafe; /* Selected active highlight backs */
-  --color-emerald-800: #bfdbfe; /* Stronger highlights */
-  --color-emerald-700: #1d4ed8; /* Darker blue text */
-  --color-emerald-600: #2563eb; /* Corporate royal blue (primary actions) */
-  --color-emerald-500: #3b82f6; /* Accent blue interactive elements */
-  --color-emerald-400: #2563eb; /* Highlights & critical status */
-  --color-emerald-300: #60a5fa; /* Focus outline */
-  --color-emerald-200: #93c5fd; /* Soft focus borders */
-  --color-emerald-100: #dbeafe; /* Background badges */
-  --color-emerald-50: #f0f9ff;  /* Extremely light highlights */
+  /* Define lotus flower rose/pink scale mapped onto the emerald/green scale for active accenting */
+  --color-emerald-950: #fdf2f8; /* Soft pink petal highlights / toasts */
+  --color-emerald-900: #fce7f3; /* Selected item petal-pink backdrop */
+  --color-emerald-800: #fbcfe8; /* Focus outlines */
+  --color-emerald-700: #be185d; /* Elegant deep lotus rose-pink text */
+  --color-emerald-600: #db2777; /* Royal lotus pink (primary actions / active items) */
+  --color-emerald-500: #ec4899; /* Interactive state pink-rose */
+  --color-emerald-400: #db2777; /* Hotspots and key action text */
+  --color-emerald-300: #f472b6; /* Active borders */
+  --color-emerald-200: #f9a8d4; /* Soft pink frames */
+  --color-emerald-100: #fce7f3; /* Pink background badges */
+  --color-emerald-50: #fff1f2;  /* Softest rose highlights */
 
-  /* Map cyan/teal to indigo & blues to ensure perfect harmony */
-  --color-cyan-500: #4f46e5;
-  --color-cyan-400: #3b82f6;
-  --color-teal-500: #0284c7;
-  --color-teal-400: #0369a1;
+  /* Map cyan and other accents to warm stamen gold and organic leaf teals */
+  --color-cyan-500: #eab308; /* Warm stamen gold */
+  --color-cyan-400: #f59e0b; /* Gold highlights */
+  --color-teal-500: #0d9488; /* Serene lotus pond leaf teal */
+  --color-teal-400: #14b8a6; /* Soft teal accents */
 }
 
-/* Custom scrollbars and styling tweaks to ensure a professional look */
+/* Custom scrollbars with warm neutrals */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f8fafc;
+  background: #fbf9f6;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #ebdcd5;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #cbd5e1;
 }

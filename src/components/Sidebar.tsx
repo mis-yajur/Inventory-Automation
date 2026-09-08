@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Package, Tags, Scale, Network, Warehouse,
   Truck, ArrowDownLeft, ArrowUpRight, RotateCcw, ArrowRightLeft,
   Sliders, Layers, TrendingUp, AlertCircle, RefreshCw, BarChart2,
-  FileText, Bell, History, Shield, Settings, Database
+  FileText, History, Shield, Settings, Database
 } from 'lucide-react';
 import { ViewType } from '../types';
 
@@ -89,19 +89,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 flex flex-col h-[calc(100vh-57px)] sticky top-[57px] shrink-0 text-slate-700 select-none overflow-y-auto shadow-sm">
-      {/* Brand Header */}
-      <div className="p-4 border-b border-slate-100 bg-slate-50/60">
+    <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-[calc(100vh-57px)] sticky top-[57px] shrink-0 text-slate-700 select-none overflow-y-auto shadow-sm">
+      {/* Brand Header with Lotus styling */}
+      <div className="p-4 border-b border-slate-800 bg-slate-950/60">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-blue-200">
-            Y
+          <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-emerald-900/30">
+            🌸
           </div>
           <div>
-            <h1 className="font-extrabold text-sm text-slate-900 tracking-tight leading-none">
+            <h1 className="font-extrabold text-sm text-slate-100 tracking-tight leading-none">
               IMS AUTOMATION
             </h1>
-            <p className="text-[11px] font-semibold text-blue-600 mt-1">
-              Yajur Fibres Portal
+            <p className="text-[11px] font-semibold text-emerald-600 mt-1">
+              Lotus Yajur Portal
             </p>
           </div>
         </div>
@@ -110,7 +110,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Nav List */}
       <nav className="flex-1 p-3 space-y-5 overflow-y-auto scrollbar-thin">
         {navGroups.map(group => {
-          // Filter items based on user role permission if defined
           const allowedItems = group.items.filter(item => {
             if (!item.allowedRoles) return true;
             return item.allowedRoles.includes(userRole);
@@ -120,7 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           return (
             <div key={group.title} className="space-y-1">
-              <h2 className="px-3 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+              <h2 className="px-3 text-[10px] font-bold tracking-wider text-slate-500 uppercase">
                 {group.title}
               </h2>
               <div className="mt-1 space-y-0.5">
@@ -133,16 +132,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       onClick={() => onViewChange(item.id)}
                       className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition group ${
                         isActive
-                          ? 'bg-blue-50 text-blue-600 font-semibold border border-blue-100/50'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50/80'
+                          ? 'bg-emerald-900 text-emerald-700 font-semibold border border-emerald-800/40'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <Icon className={`w-4 h-4 transition ${isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-700'}`} />
+                        <Icon className={`w-4 h-4 transition ${isActive ? 'text-emerald-700' : 'text-slate-500 group-hover:text-slate-300'}`} />
                         <span>{item.label}</span>
                       </div>
                       {item.badge !== undefined && (
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${item.badgeColor || 'bg-slate-100 text-slate-600'}`}>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${item.badgeColor || 'bg-slate-800 text-slate-400'}`}>
                           {item.badge}
                         </span>
                       )}
@@ -156,11 +155,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       {/* Footer Info */}
-      <div className="p-3 border-t border-slate-100 bg-slate-50/60 text-[10px] text-slate-500 flex items-center justify-between">
+      <div className="p-3 border-t border-slate-800 bg-slate-950/60 text-[10px] text-slate-500 flex items-center justify-between">
         <div>
-          <span className="font-semibold text-slate-700">v2.4.0</span> • Enterprise
+          <span className="font-semibold text-slate-400">v2.4.0</span> • Enterprise
         </div>
-        <div className="text-blue-600 font-semibold">
+        <div className="text-emerald-600 font-semibold">
           IMS Yajur
         </div>
       </div>

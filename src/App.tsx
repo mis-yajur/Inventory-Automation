@@ -251,7 +251,13 @@ export const App: React.FC = () => {
   const renderActiveView = () => {
     switch (state.activeView) {
       case 'dashboard':
-        return <DashboardView state={state} onNavigate={handleActiveViewChange} />;
+        return (
+          <DashboardView
+            state={state}
+            onNavigateTab={handleActiveViewChange}
+            onSelectItem={setSelectedItemForView}
+          />
+        );
       case 'items':
         return (
           <ItemMasterView
@@ -308,7 +314,13 @@ export const App: React.FC = () => {
       case 'plugin_architecture':
         return <PluginArchitectureView state={state} setState={setState} />;
       default:
-        return <DashboardView state={state} onNavigate={handleActiveViewChange} />;
+        return (
+          <DashboardView
+            state={state}
+            onNavigateTab={handleActiveViewChange}
+            onSelectItem={setSelectedItemForView}
+          />
+        );
     }
   };
 
