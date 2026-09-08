@@ -156,31 +156,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   };
   const healthInfo = getHealthStatus(healthScore);
 
-  // Management Insights (#118)
-  const getInsights = () => {
-    const insights = [];
-    insights.push(`${formatValuation(totalStockValue)} inventory is currently held across ${totalItems} active items.`);
-    
-    if (overstockCount > 0) {
-      insights.push(`${overstockCount} items are overstocked, tying up excess capital.`);
-    }
-    
-    if (criticalCount > 0 || outOfStockCount > 0) {
-      insights.push(`${criticalCount + outOfStockCount} items may run out before replenishment based on lead times.`);
-    }
 
-    if (nonMovingCount > 0) {
-      insights.push(`${nonMovingCount} items have recorded no consumption for more than 90 days.`);
-    }
-
-    const highValueItems = [...state.items].sort((a, b) => b.stockValue - a.stockValue).slice(0, 3);
-    if (highValueItems.length > 0) {
-      insights.push(`Top 3 high-value items account for ${formatValuation(highValueItems.reduce((s, i) => s + i.stockValue, 0))} of total value.`);
-    }
-
-    return insights;
-  };
-  const insights = getInsights();
 
   // Recharts Category Distribution
   const categoryMap: Record<string, number> = {};
@@ -244,50 +220,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
-      {/* Management Insights (#118) */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <div className="lg:col-span-3 p-5 bg-slate-900 border border-slate-800 rounded-2xl">
-          <div className="flex items-center gap-2 mb-4">
-            <Lightbulb className="w-5 h-5 text-amber-400" />
-            <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wider">Management Insights</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-6">
-            {insights.map((insight, idx) => (
-              <div key={idx} className="flex items-start gap-3 text-xs text-slate-300">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                <p className="leading-relaxed">{insight}</p>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col justify-between">
-          <div className="flex items-center gap-2 mb-4">
-            <Activity className="w-5 h-5 text-emerald-400" />
-            <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wider">Health Factors</h3>
-          </div>
-          <div className="space-y-3">
-            {[
-              { label: 'Stock Availability', score: 100 - (outOfStockCount/totalItems)*100 },
-              { label: 'Reorder Compliance', score: 100 - (criticalCount/totalItems)*100 },
-              { label: 'Capital Efficiency', score: 100 - (overstockCount/totalItems)*100 }
-            ].map(f => (
-              <div key={f.label} className="space-y-1">
-                <div className="flex justify-between text-[10px] text-slate-400">
-                  <span>{f.label}</span>
-                  <span>{Math.round(f.score)}%</span>
-                </div>
-                <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-emerald-500 rounded-full" 
-                    style={{ width: `${f.score}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
