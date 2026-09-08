@@ -1,15 +1,23 @@
 import React, { useState } from 'react';
-import { BookOpen, Search, Download, Calendar, Filter, Printer } from 'lucide-react';
+import { BookOpen, Search, Download, Calendar, Filter, Printer, RotateCcw } from 'lucide-react';
 import { AppState } from '../services/store';
+import { StockLedgerEntry } from '../types';
 import { formatCurrency } from '../utils/calculations';
 
 interface StockLedgerViewProps {
   state: AppState;
+  onReverse?: (entry: StockLedgerEntry) => void;
 }
 
-export const StockLedgerView: React.FC<StockLedgerViewProps> = ({ state }) => {
+export const StockLedgerView: React.FC<StockLedgerViewProps> = ({ state, onReverse }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('ALL');
+
+  const handleReverseClick = (entry: StockLedgerEntry) => {
+    if (window.confirm(`Are you sure you want to REVERSE this transaction (${entry.referenceNumber})? This will create a counter-transaction to neutralize the stock effect.`)) {
+      if (onReverse) onReverse(entry);
+    }
+  };
 
   const filteredLedger = state.ledger.filter(l => {
     const matchesSearch =
@@ -116,39 +124,55 @@ export const StockLedgerView: React.FC<StockLedgerViewProps> = ({ state }) => {
                 <th className="p-3 text-right">Rate (₹)</th>
                 <th className="p-3 text-right">Balance Value</th>
                 <th className="p-3">User</th>
+                <th className="p-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
               {filteredLedger.length === 0 ? (
-                <tr><td colSpan={11} className="p-8 text-center text-slate-500">No matching ledger entries found.</td></tr>
+                <tr><td colSpan={12} className="p-8 text-center text-slate-500">No matching ledger entries found.</td></tr>
               ) : (
-                filteredLedger.map(entry => (
-                  <tr key={entry.id} className="hover:bg-slate-800/50">
-                    <td className="p-3 font-mono text-slate-400">{entry.transactionDate}</td>
-                    <td className="p-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                        entry.transactionType === 'STOCK_IN' || entry.transactionType === 'OPENING' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-                        entry.transactionType === 'ISSUE' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' :
-                        entry.transactionType === 'RETURN' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
-                        'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                      }`}>
-                        {entry.transactionType}
-                      </span>
-                    </td>
-                    <td className="p-3 font-mono font-bold text-slate-200">{entry.referenceNumber}</td>
-                    <td className="p-3">
-                      <strong className="text-emerald-400 font-mono block">{entry.itemCode}</strong>
-                      <span className="text-slate-300 font-semibold">{entry.itemName}</span>
-                    </td>
-                    <td className="p-3 text-slate-400">{entry.storeName}</td>
-                    <td className="p-3 text-right font-mono text-emerald-400 font-bold">{entry.inwardQty > 0 ? `+${entry.inwardQty}` : '-'}</td>
-                    <td className="p-3 text-right font-mono text-rose-400 font-bold">{entry.outwardQty > 0 ? `-${entry.outwardQty}` : '-'}</td>
-                    <td className="p-3 text-right font-mono font-black text-slate-100">{entry.runningQty}</td>
-                    <td className="p-3 text-right font-mono text-slate-300">₹{entry.rate}</td>
-                    <td className="p-3 text-right font-mono font-bold text-emerald-400">{formatCurrency(entry.runningStockValue)}</td>
-                    <td className="p-3 text-slate-400">{entry.userName}</td>
-                  </tr>
-                ))
+                filteredLedger.map(entry => {
+                  const isReversible = entry.transactionType !== 'OPENING' && entry.transactionType !== 'MONTHLY_CLOSE' && !entry.referenceNumber.startsWith('REV-');
+                  
+                  return (
+                    <tr key={entry.id} className="hover:bg-slate-800/50">
+                      <td className="p-3 font-mono text-slate-400">{entry.transactionDate}</td>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                          entry.transactionType === 'STOCK_IN' || entry.transactionType === 'OPENING' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                          entry.transactionType === 'ISSUE' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' :
+                          entry.transactionType === 'RETURN' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
+                          'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                        }`}>
+                          {entry.transactionType}
+                        </span>
+                      </td>
+                      <td className="p-3 font-mono font-bold text-slate-200">{entry.referenceNumber}</td>
+                      <td className="p-3">
+                        <strong className="text-emerald-400 font-mono block">{entry.itemCode}</strong>
+                        <span className="text-slate-300 font-semibold">{entry.itemName}</span>
+                      </td>
+                      <td className="p-3 text-slate-400">{entry.storeName}</td>
+                      <td className="p-3 text-right font-mono text-emerald-400 font-bold">{entry.inwardQty > 0 ? `+${entry.inwardQty}` : '-'}</td>
+                      <td className="p-3 text-right font-mono text-rose-400 font-bold">{entry.outwardQty > 0 ? `-${entry.outwardQty}` : '-'}</td>
+                      <td className="p-3 text-right font-mono font-black text-slate-100">{entry.runningQty}</td>
+                      <td className="p-3 text-right font-mono text-slate-300">₹{entry.rate}</td>
+                      <td className="p-3 text-right font-mono font-bold text-emerald-400">{formatCurrency(entry.runningStockValue)}</td>
+                      <td className="p-3 text-slate-400">{entry.userName}</td>
+                      <td className="p-3 text-right">
+                        {isReversible && onReverse && (
+                          <button
+                            onClick={() => handleReverseClick(entry)}
+                            className="p-1.5 bg-slate-800 hover:bg-rose-950/40 text-slate-500 hover:text-rose-500 border border-slate-700/60 hover:border-rose-900/60 rounded transition-all"
+                            title="Reverse Transaction"
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

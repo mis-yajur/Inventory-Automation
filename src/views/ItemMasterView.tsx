@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {
   Package, Plus, Search, Filter, Download, Scan, SlidersHorizontal,
-  Edit2, Eye, Shield, AlertTriangle, Layers, Grid, List, Printer, HelpCircle
+  Edit2, Eye, Shield, AlertTriangle, Layers, Grid, List, Printer, HelpCircle,
+  Trash2
 } from 'lucide-react';
 import { AppState } from '../services/store';
 import { Item } from '../types';
@@ -11,6 +12,7 @@ interface ItemMasterViewProps {
   state: AppState;
   onOpenAddItem: () => void;
   onEditItem: (item: Item) => void;
+  onDeleteItem: (itemId: string) => void;
   onSelectItem: (item: Item) => void;
 }
 
@@ -18,6 +20,7 @@ export const ItemMasterView: React.FC<ItemMasterViewProps> = ({
   state,
   onOpenAddItem,
   onEditItem,
+  onDeleteItem,
   onSelectItem
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -273,6 +276,17 @@ export const ItemMasterView: React.FC<ItemMasterViewProps> = ({
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
+                            <button
+                              onClick={() => {
+                                if (window.confirm(`Are you sure you want to delete ${item.itemName}? This action cannot be undone.`)) {
+                                  onDeleteItem(item.id);
+                                }
+                              }}
+                              title="Delete Item"
+                              className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-rose-500 transition"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -340,6 +354,17 @@ export const ItemMasterView: React.FC<ItemMasterViewProps> = ({
                     className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-lg text-xs font-semibold transition border border-slate-700"
                   >
                     Edit
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (window.confirm(`Are you sure you want to delete ${item.itemName}?`)) {
+                        onDeleteItem(item.id);
+                      }
+                    }}
+                    className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-500 rounded-lg text-xs font-semibold transition border border-slate-700"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>

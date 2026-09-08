@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { loadInitialState, saveStateToStorage, AppState } from './services/store';
-import { Item, ViewType } from './types';
+import { Item, ViewType, StockLedgerEntry } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { GlobalSearchModal } from './components/GlobalSearchModal';
@@ -40,6 +40,8 @@ import { AuditTrailView } from './views/AuditTrailView';
 import { RoleManagementView } from './views/RoleManagementView';
 import { PluginArchitectureView } from './views/PluginArchitectureView';
 import { SystemSettingsView } from './views/SystemSettingsView';
+import { ReportsView } from './views/ReportsView';
+import { DataQualityView } from './views/DataQualityView';
 
 export const App: React.FC = () => {
   const [state, setState] = useState<AppState>(loadInitialState);
@@ -193,6 +195,107 @@ export const App: React.FC = () => {
     setIsItemFormOpen(true);
   };
 
+  const handleReverseTransaction = (entry: StockLedgerEntry) => {
+    const reverseRef = `REV-${entry.referenceNumber}`;
+    const timestamp = new Date().toISOString();
+    const date = timestamp.split('T')[0];
+
+    setState(prev => {
+      const item = prev.items.find(i => i.id === entry.itemId);
+      if (!item) return prev;
+
+      // Calculate stock change (neutralize the original effect)
+      // Original Inward 50 -> New Outward 50
+      // Original Outward 30 -> New Inward 30
+      const inwardQty = entry.outwardQty;
+      const outwardQty = entry.inwardQty;
+      
+      const newQty = item.currentQty + inwardQty - outwardQty;
+      const newValue = newQty * item.averageRate;
+
+      const newLedgerEntry: StockLedgerEntry = {
+        id: `led-${Date.now()}`,
+        transactionDate: date,
+        transactionType: entry.transactionType,
+        referenceNumber: reverseRef,
+        itemId: entry.itemId,
+        itemCode: entry.itemCode,
+        itemName: entry.itemName,
+        storeId: entry.storeId,
+        storeName: entry.storeName,
+        departmentId: entry.departmentId,
+        departmentName: entry.departmentName,
+        inwardQty,
+        outwardQty,
+        runningQty: newQty,
+        rate: entry.rate,
+        inwardValue: inwardQty * entry.rate,
+        outwardValue: outwardQty * entry.rate,
+        runningStockValue: newValue,
+        userId: prev.activeUser.id,
+        userName: prev.activeUser.name,
+        timestamp
+      };
+
+      return {
+        ...prev,
+        items: prev.items.map(i => i.id === entry.itemId ? {
+          ...i,
+          currentQty: newQty,
+          availableQty: newQty - (i.reservedQty || 0),
+          stockValue: newValue,
+          updatedAt: date
+        } : i),
+        ledger: [newLedgerEntry, ...prev.ledger],
+        auditLogs: [
+          {
+            id: `aud-${Date.now()}`,
+            timestamp,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            userId: prev.activeUser.id,
+            userName: prev.activeUser.name,
+            module: 'Inventory Control',
+            action: 'REVERSE',
+            record: entry.referenceNumber,
+            previousValue: 'POSTED',
+            newValue: 'REVERSED',
+            reason: `Transaction reversal created with ref: ${reverseRef}`
+          },
+          ...prev.auditLogs
+        ]
+      };
+    });
+  };
+
+  const handleDeleteItem = (itemId: string) => {
+    setState(prev => {
+      const itemToDelete = prev.items.find(i => i.id === itemId);
+      if (!itemToDelete) return prev;
+
+      return {
+        ...prev,
+        items: prev.items.filter(i => i.id !== itemId),
+        ledger: prev.ledger.filter(l => l.itemId !== itemId),
+        auditLogs: [
+          {
+            id: `aud-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            userId: prev.activeUser.id,
+            userName: prev.activeUser.name,
+            module: 'Item Master',
+            action: 'DELETE',
+            record: itemToDelete.itemCode,
+            previousValue: itemToDelete.itemName,
+            newValue: 'DELETED',
+            reason: 'Item deleted from master catalog'
+          },
+          ...prev.auditLogs
+        ]
+      };
+    });
+  };
+
   const handleSaveItem = (itemData: Partial<Item>) => {
     const now = new Date().toISOString().split('T')[0];
 
@@ -338,6 +441,7 @@ export const App: React.FC = () => {
             state={state}
             onSelectItem={setSelectedItemForView}
             onEditItem={handleEditItem}
+            onDeleteItem={handleDeleteItem}
             onOpenAddItem={handleCreateNewItem}
           />
         );
@@ -374,7 +478,7 @@ export const App: React.FC = () => {
       case 'monthly_closing':
         return <MonthlyClosingView state={state} setState={setState} />;
       case 'stock_ledger':
-        return <StockLedgerView state={state} />;
+        return <StockLedgerView state={state} onReverse={handleReverseTransaction} />;
       case 'stock_valuation':
         return <StockValuationReportView state={state} />;
       case 'abc_analysis':
@@ -383,6 +487,10 @@ export const App: React.FC = () => {
         return <FastSlowMovingView state={state} />;
       case 'audit_trail':
         return <AuditTrailView state={state} />;
+      case 'reports':
+        return <ReportsView state={state} onNavigate={handleActiveViewChange} />;
+      case 'data_quality':
+        return <DataQualityView state={state} />;
       case 'role_management':
         return <RoleManagementView state={state} setState={setState} />;
       case 'plugin_architecture':

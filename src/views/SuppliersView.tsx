@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Truck, Plus, Phone, Mail, Clock, ShieldAlert, Award, TrendingUp } from 'lucide-react';
+import { Truck, Plus, Phone, Mail, Clock, ShieldAlert, Award, TrendingUp, Edit2, Trash2 } from 'lucide-react';
 import { AppState } from '../services/store';
 import { Supplier } from '../types';
 
@@ -10,6 +10,7 @@ interface SuppliersViewProps {
 
 export const SuppliersView: React.FC<SuppliersViewProps> = ({ state, setState }) => {
   const [showAdd, setShowAdd] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [person, setPerson] = useState('');
@@ -18,7 +19,6 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ state, setState })
   const [leadTime, setLeadTime] = useState(7);
   const [rating, setRating] = useState(4.8);
 
-  // Feature 5: Supplier Quality & Fulfillment Incident Log state
   const [incidents, setIncidents] = useState<Record<string, number>>({
     'SUP-001': 1,
     'SUP-002': 0,
@@ -36,33 +36,72 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ state, setState })
     e.preventDefault();
     if (!name) return;
 
-    const newSup: Supplier = {
-      id: `sup-${Date.now()}`,
-      code: code || `SUP-00${state.suppliers.length + 1}`,
-      name,
-      contactPerson: person || 'Sales Desk',
-      phone: phone || '+91 9800000000',
-      email: email || 'sales@supplier.com',
-      address: 'Industrial Zone',
-      leadTimeDays: leadTime,
-      preferred: true,
-      active: true,
-      // Store rating score
-      rating: rating
-    } as any;
+    if (editingId) {
+      setState(prev => ({
+        ...prev,
+        suppliers: prev.suppliers.map(s => s.id === editingId ? { 
+          ...s, 
+          code, 
+          name, 
+          contactPerson: person, 
+          phone, 
+          email, 
+          leadTimeDays: leadTime,
+          rating: rating
+        } : s)
+      }));
+      setEditingId(null);
+    } else {
+      const newSup: Supplier = {
+        id: `sup-${Date.now()}`,
+        code: code || `SUP-00${state.suppliers.length + 1}`,
+        name,
+        contactPerson: person || 'Sales Desk',
+        phone: phone || '+91 9800000000',
+        email: email || 'sales@supplier.com',
+        address: 'Industrial Zone',
+        leadTimeDays: leadTime,
+        preferred: true,
+        active: true,
+        rating: rating
+      } as any;
 
-
-    setState(prev => ({
-      ...prev,
-      suppliers: [...prev.suppliers, newSup]
-    }));
+      setState(prev => ({
+        ...prev,
+        suppliers: [...prev.suppliers, newSup]
+      }));
+    }
 
     setCode('');
     setName('');
     setPerson('');
     setPhone('');
     setEmail('');
+    setLeadTime(7);
+    setRating(4.8);
     setShowAdd(false);
+  };
+
+  const startEdit = (sup: Supplier) => {
+    setEditingId(sup.id);
+    setCode(sup.code);
+    setName(sup.name);
+    setPerson(sup.contactPerson || '');
+    setPhone(sup.phone || '');
+    setEmail(sup.email || '');
+    setLeadTime(sup.leadTimeDays || 7);
+    setRating((sup as any).rating || 4.8);
+    setShowAdd(true);
+  };
+
+  const handleDelete = (sup: Supplier) => {
+    const usageCount = state.items.filter(i => i.barcode === sup.code).length; // Just a dummy check, normally would check POs/Vendors
+    if (window.confirm(`Are you sure you want to delete vendor "${sup.name}"?`)) {
+      setState(prev => ({
+        ...prev,
+        suppliers: prev.suppliers.filter(s => s.id !== sup.id)
+      }));
+    }
   };
 
   return (
@@ -85,7 +124,10 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ state, setState })
       </div>
 
       {showAdd && (
-        <form onSubmit={handleAdd} className="p-4 bg-slate-900 border border-slate-700 rounded-2xl space-y-4">
+        <form onSubmit={handleAdd} className="p-4 bg-slate-900 border border-slate-700 rounded-2xl space-y-4 shadow-xl">
+          <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+            {editingId ? 'Edit Vendor / Supplier' : 'New Vendor Entry'}
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <input
               type="text"
@@ -142,8 +184,26 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ state, setState })
             />
           </div>
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setShowAdd(false)} className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded text-xs">Cancel</button>
-            <button type="submit" className="px-4 py-1.5 bg-emerald-600 text-white rounded text-xs font-bold">Save Vendor</button>
+            <button 
+              type="button" 
+              onClick={() => {
+                setShowAdd(false);
+                setEditingId(null);
+                setCode('');
+                setName('');
+                setPerson('');
+                setPhone('');
+                setEmail('');
+                setLeadTime(7);
+                setRating(4.8);
+              }} 
+              className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded text-xs"
+            >
+              Cancel
+            </button>
+            <button type="submit" className="px-4 py-1.5 bg-emerald-600 text-white rounded text-xs font-bold">
+              {editingId ? 'Update Vendor' : 'Save Vendor'}
+            </button>
           </div>
         </form>
       )}
@@ -156,14 +216,30 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ state, setState })
           const fillRate = Math.max(45, 99.5 - (supplierIncidents * 6.5));
 
           return (
-            <div key={sup.id} className="p-4 bg-slate-900 border border-slate-800 rounded-2xl space-y-3 flex flex-col justify-between">
+            <div key={sup.id} className="p-4 bg-slate-900 border border-slate-800 rounded-2xl space-y-3 flex flex-col justify-between group relative">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-emerald-400 font-bold text-xs">{sup.code}</span>
                   <div className="flex flex-col items-end gap-1">
-                    <span className="flex items-center gap-1 text-[11px] font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
-                      <Clock className="w-3 h-3" /> {sup.leadTimeDays} Days Lead
-                    </span>
+                    <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={() => startEdit(sup)}
+                          className="p-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(sup)}
+                          className="p-1 bg-slate-800 hover:bg-slate-700 text-rose-500 rounded border border-slate-700"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                      <span className="flex items-center gap-1 text-[11px] font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
+                        <Clock className="w-3 h-3" /> {sup.leadTimeDays} Days Lead
+                      </span>
+                    </div>
                     <span className="text-[9px] text-slate-500 font-mono">{variance}</span>
                   </div>
                 </div>

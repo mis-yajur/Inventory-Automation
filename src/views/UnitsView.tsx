@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Scale, Plus, UploadCloud, FileText, Loader2 } from 'lucide-react';
+import { Scale, Plus, UploadCloud, FileText, Loader2, Edit2, Trash2 } from 'lucide-react';
 import { AppState } from '../services/store';
 import { Unit } from '../types';
 
@@ -10,35 +10,69 @@ interface UnitsViewProps {
 
 export const UnitsView: React.FC<UnitsViewProps> = ({ state, setState }) => {
   const [showAdd, setShowAdd] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'single' | 'bulk'>('single');
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [decimalAllowed, setDecimalAllowed] = useState(false);
   const [bulkText, setBulkText] = useState('');
   const [dragActive, setDragActive] = useState(false);
-  const isParsing = false; // Placeholder for now
-  const error = null; // Placeholder for now
+  const isParsing = false; 
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!code || !name) return;
 
-    const newUnit: Unit = {
-      id: `u-${Date.now()}`,
-      code: code.toUpperCase(),
-      name,
-      decimalAllowed,
-      active: true
-    };
+    if (editingId) {
+      setState(prev => ({
+        ...prev,
+        units: prev.units.map(u => u.id === editingId ? { ...u, code: code.toUpperCase(), name, decimalAllowed } : u),
+        items: prev.items.map(i => i.unitId === editingId ? { ...i, unitName: code.toUpperCase() } : i)
+      }));
+      setEditingId(null);
+    } else {
+      const newUnit: Unit = {
+        id: `u-${Date.now()}`,
+        code: code.toUpperCase(),
+        name,
+        decimalAllowed,
+        active: true
+      };
 
-    setState(prev => ({
-      ...prev,
-      units: [...prev.units, newUnit]
-    }));
+      setState(prev => ({
+        ...prev,
+        units: [...prev.units, newUnit]
+      }));
+    }
 
     setCode('');
     setName('');
+    setDecimalAllowed(false);
     setShowAdd(false);
+  };
+
+  const startEdit = (unit: Unit) => {
+    setEditingId(unit.id);
+    setCode(unit.code);
+    setName(unit.name);
+    setDecimalAllowed(unit.decimalAllowed);
+    setActiveTab('single');
+    setShowAdd(true);
+  };
+
+  const handleDelete = (unit: Unit) => {
+    const itemCount = state.items.filter(i => i.unitId === unit.id).length;
+    if (itemCount > 0) {
+      alert(`Cannot delete unit "${unit.code}" because it is assigned to ${itemCount} items.`);
+      return;
+    }
+
+    if (window.confirm(`Are you sure you want to delete the unit "${unit.code}"?`)) {
+      setState(prev => ({
+        ...prev,
+        units: prev.units.filter(u => u.id !== unit.id)
+      }));
+    }
   };
 
   const handleBulkUploadSubmit = (e: React.FormEvent) => {
@@ -163,6 +197,9 @@ export const UnitsView: React.FC<UnitsViewProps> = ({ state, setState }) => {
           <div className="p-5">
             {activeTab === 'single' ? (
               <form onSubmit={handleAdd} className="space-y-4">
+                <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                  {editingId ? 'Edit Unit' : 'New Unit Entry'}
+                </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <input
                     type="text"
@@ -191,8 +228,22 @@ export const UnitsView: React.FC<UnitsViewProps> = ({ state, setState }) => {
                   </label>
                 </div>
                 <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
-                  <button type="button" onClick={() => setShowAdd(false)} className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg text-xs">Cancel</button>
-                  <button type="submit" className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition">Save UOM</button>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setShowAdd(false);
+                      setEditingId(null);
+                      setCode('');
+                      setName('');
+                      setDecimalAllowed(false);
+                    }} 
+                    className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg text-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition">
+                    {editingId ? 'Update UOM' : 'Save UOM'}
+                  </button>
                 </div>
               </form>
             ) : (
@@ -253,10 +304,25 @@ export const UnitsView: React.FC<UnitsViewProps> = ({ state, setState }) => {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {state.units.map(unit => (
-          <div key={unit.id} className="p-4 bg-slate-900 border border-slate-800 rounded-2xl text-center">
+          <div key={unit.id} className="p-4 bg-slate-900 border border-slate-800 rounded-2xl text-center group relative">
             <span className="font-mono text-emerald-400 font-black text-base block">{unit.code}</span>
             <span className="text-xs font-semibold text-slate-200 mt-1 block">{unit.name}</span>
             <span className="text-[10px] text-slate-500 mt-1 block">Decimals: {unit.decimalAllowed ? 'Yes' : 'No'}</span>
+            
+            <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button 
+                onClick={() => startEdit(unit)}
+                className="p-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700 shadow-lg"
+              >
+                <Edit2 className="w-3 h-3" />
+              </button>
+              <button 
+                onClick={() => handleDelete(unit)}
+                className="p-1 bg-slate-800 hover:bg-slate-700 text-rose-500 rounded border border-slate-700 shadow-lg"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            </div>
           </div>
         ))}
       </div>

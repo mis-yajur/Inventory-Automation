@@ -10,6 +10,7 @@ interface CategoriesViewProps {
 
 export const CategoriesView: React.FC<CategoriesViewProps> = ({ state, setState }) => {
   const [showAdd, setShowAdd] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -18,23 +19,55 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({ state, setState 
     e.preventDefault();
     if (!name) return;
 
-    const newCat: Category = {
-      id: `cat-${Date.now()}`,
-      code: code || `CAT-00${state.categories.length + 1}`,
-      name,
-      description,
-      active: true
-    };
+    if (editingId) {
+      setState(prev => ({
+        ...prev,
+        categories: prev.categories.map(c => c.id === editingId ? { ...c, code, name, description } : c),
+        items: prev.items.map(i => i.categoryId === editingId ? { ...i, categoryName: name } : i)
+      }));
+      setEditingId(null);
+    } else {
+      const newCat: Category = {
+        id: `cat-${Date.now()}`,
+        code: code || `CAT-00${state.categories.length + 1}`,
+        name,
+        description,
+        active: true
+      };
 
-    setState(prev => ({
-      ...prev,
-      categories: [...prev.categories, newCat]
-    }));
+      setState(prev => ({
+        ...prev,
+        categories: [...prev.categories, newCat]
+      }));
+    }
 
     setCode('');
     setName('');
     setDescription('');
     setShowAdd(false);
+  };
+
+  const startEdit = (cat: Category) => {
+    setEditingId(cat.id);
+    setCode(cat.code);
+    setName(cat.name);
+    setDescription(cat.description || '');
+    setShowAdd(true);
+  };
+
+  const handleDelete = (cat: Category) => {
+    const itemCount = state.items.filter(i => i.categoryId === cat.id).length;
+    if (itemCount > 0) {
+      alert(`Cannot delete category "${cat.name}" because it contains ${itemCount} items. Move the items first.`);
+      return;
+    }
+
+    if (window.confirm(`Are you sure you want to delete the category "${cat.name}"?`)) {
+      setState(prev => ({
+        ...prev,
+        categories: prev.categories.filter(c => c.id !== cat.id)
+      }));
+    }
   };
 
   return (
@@ -58,7 +91,9 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({ state, setState 
 
       {showAdd && (
         <form onSubmit={handleAdd} className="p-4 bg-slate-900 border border-slate-700 rounded-2xl space-y-4 animate-in fade-in">
-          <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">New Category</h3>
+          <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+            {editingId ? 'Edit Category' : 'New Category'}
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <input
               type="text"
@@ -84,8 +119,22 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({ state, setState 
             />
           </div>
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setShowAdd(false)} className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded text-xs">Cancel</button>
-            <button type="submit" className="px-4 py-1.5 bg-emerald-600 text-white rounded text-xs font-bold">Save Category</button>
+            <button 
+              type="button" 
+              onClick={() => {
+                setShowAdd(false);
+                setEditingId(null);
+                setCode('');
+                setName('');
+                setDescription('');
+              }} 
+              className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded text-xs"
+            >
+              Cancel
+            </button>
+            <button type="submit" className="px-4 py-1.5 bg-emerald-600 text-white rounded text-xs font-bold">
+              {editingId ? 'Update Category' : 'Save Category'}
+            </button>
           </div>
         </form>
       )}
@@ -94,11 +143,27 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({ state, setState 
         {state.categories.map(cat => {
           const itemCount = state.items.filter(i => i.categoryId === cat.id).length;
           return (
-            <div key={cat.id} className="p-4 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-between">
+            <div key={cat.id} className="p-4 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-between group">
               <div>
                 <span className="font-mono text-emerald-400 text-xs font-bold">{cat.code}</span>
                 <h3 className="font-bold text-sm text-slate-100">{cat.name}</h3>
                 <p className="text-xs text-slate-400 mt-0.5">{cat.description || 'General category'}</p>
+                <div className="flex items-center gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={() => startEdit(cat)}
+                    className="p-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-lg transition border border-slate-700"
+                    title="Edit Category"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(cat)}
+                    className="p-1.5 bg-slate-800 hover:bg-slate-700 text-rose-500 rounded-lg transition border border-slate-700"
+                    title="Delete Category"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
               <div className="text-right">
                 <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-200 text-xs font-bold border border-slate-700 block">

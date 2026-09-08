@@ -84,6 +84,8 @@ export type ViewType =
   | 'audit_trail'
   | 'role_management'
   | 'system_settings'
+  | 'reports'
+  | 'data_quality'
   | 'plugin_architecture';
 
 
@@ -351,6 +353,11 @@ export interface CompanySettings {
   deadStockDays: number;
   consumptionSpikeThreshold: number; // percentage
   quantityPrecision: number;
+  valuePrecision: number;
+  financialYear: string;
+  defaultLeadTime: number;
+  defaultSafetyFactor: number;
+  ageingBands: string[];
   monthlyCloseLock: boolean;
   darkMode: boolean;
 }

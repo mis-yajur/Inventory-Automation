@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Warehouse, Plus, MapPin, User, Grid, ClipboardCheck, Sparkles, AlertCircle } from 'lucide-react';
+import { Warehouse, Plus, MapPin, User, Grid, ClipboardCheck, Sparkles, AlertCircle, Edit2, Trash2 } from 'lucide-react';
 import { AppState } from '../services/store';
 import { Store } from '../types';
 
@@ -10,6 +10,7 @@ interface StoresViewProps {
 
 export const StoresView: React.FC<StoresViewProps> = ({ state, setState }) => {
   const [showAdd, setShowAdd] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [person, setPerson] = useState('');
@@ -29,25 +30,58 @@ export const StoresView: React.FC<StoresViewProps> = ({ state, setState }) => {
     e.preventDefault();
     if (!name) return;
 
-    const newStore: Store = {
-      id: `str-${Date.now()}`,
-      code: code || `STR-0${state.stores.length + 1}`,
-      name,
-      responsiblePerson: person || 'Storekeeper',
-      location: location || 'Central Warehouse',
-      active: true
-    };
+    if (editingId) {
+      setState(prev => ({
+        ...prev,
+        stores: prev.stores.map(s => s.id === editingId ? { ...s, code, name, responsiblePerson: person, location } : s),
+        items: prev.items.map(i => i.defaultStoreId === editingId ? { ...i, defaultStoreName: name } : i)
+      }));
+      setEditingId(null);
+    } else {
+      const newStore: Store = {
+        id: `str-${Date.now()}`,
+        code: code || `STR-0${state.stores.length + 1}`,
+        name,
+        responsiblePerson: person || 'Storekeeper',
+        location: location || 'Central Warehouse',
+        active: true
+      };
 
-    setState(prev => ({
-      ...prev,
-      stores: [...prev.stores, newStore]
-    }));
+      setState(prev => ({
+        ...prev,
+        stores: [...prev.stores, newStore]
+      }));
+    }
 
     setCode('');
     setName('');
     setPerson('');
     setLocation('');
     setShowAdd(false);
+  };
+
+  const startEdit = (store: Store) => {
+    setEditingId(store.id);
+    setCode(store.code);
+    setName(store.name);
+    setPerson(store.responsiblePerson || '');
+    setLocation(store.location || '');
+    setShowAdd(true);
+  };
+
+  const handleDelete = (store: Store) => {
+    const itemCount = state.items.filter(i => i.defaultStoreId === store.id).length;
+    if (itemCount > 0) {
+      alert(`Cannot delete store "${store.name}" because it contains ${itemCount} items. Transfer stock first.`);
+      return;
+    }
+
+    if (window.confirm(`Are you sure you want to delete store "${store.name}"?`)) {
+      setState(prev => ({
+        ...prev,
+        stores: prev.stores.filter(s => s.id !== store.id)
+      }));
+    }
   };
 
   const handleScheduleAudit = (e: React.FormEvent) => {
@@ -103,7 +137,10 @@ export const StoresView: React.FC<StoresViewProps> = ({ state, setState }) => {
       </div>
 
       {showAdd && (
-        <form onSubmit={handleAdd} className="p-4 bg-slate-900 border border-slate-700 rounded-2xl space-y-4">
+        <form onSubmit={handleAdd} className="p-4 bg-slate-900 border border-slate-700 rounded-2xl space-y-4 shadow-xl">
+          <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+            {editingId ? 'Edit Warehouse Store' : 'New Warehouse Store Entry'}
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <input
               type="text"
@@ -136,8 +173,23 @@ export const StoresView: React.FC<StoresViewProps> = ({ state, setState }) => {
             />
           </div>
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setShowAdd(false)} className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded text-xs">Cancel</button>
-            <button type="submit" className="px-4 py-1.5 bg-emerald-600 text-white rounded text-xs font-bold">Save Store</button>
+            <button 
+              type="button" 
+              onClick={() => {
+                setShowAdd(false);
+                setEditingId(null);
+                setCode('');
+                setName('');
+                setPerson('');
+                setLocation('');
+              }} 
+              className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded text-xs"
+            >
+              Cancel
+            </button>
+            <button type="submit" className="px-4 py-1.5 bg-emerald-600 text-white rounded text-xs font-bold">
+              {editingId ? 'Update Store' : 'Save Store'}
+            </button>
           </div>
         </form>
       )}
@@ -149,12 +201,30 @@ export const StoresView: React.FC<StoresViewProps> = ({ state, setState }) => {
             .reduce((sum, i) => sum + i.stockValue, 0);
 
           return (
-            <div key={store.id} className="p-4 bg-slate-900 border border-slate-800 rounded-2xl space-y-3">
+            <div key={store.id} className="p-4 bg-slate-900 border border-slate-800 rounded-2xl space-y-3 group relative">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-emerald-400 font-bold text-xs">{store.code}</span>
-                <span className="text-[10px] text-slate-400 font-semibold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded text-emerald-400">
-                  Active Location
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-slate-400 font-semibold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded text-emerald-400">
+                    Active
+                  </span>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={() => startEdit(store)}
+                      className="p-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700"
+                      title="Edit Store"
+                    >
+                      <Edit2 className="w-3 h-3" />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(store)}
+                      className="p-1 bg-slate-800 hover:bg-slate-700 text-rose-500 rounded border border-slate-700"
+                      title="Delete Store"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div>

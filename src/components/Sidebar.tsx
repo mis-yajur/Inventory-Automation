@@ -76,6 +76,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: 'stock_valuation', label: 'Asset Valuation', icon: BarChart2 },
         { id: 'abc_analysis', label: 'ABC Classification', icon: BarChart2 },
         { id: 'fast_slow_moving', label: 'FSN Analysis', icon: TrendingUp },
+        { id: 'reports', label: 'Reports Center', icon: FileText },
         { id: 'audit_trail', label: 'Security Audit Logs', icon: History, allowedRoles: ['Admin', 'Finance Auditor'] }
       ]
     },
@@ -83,6 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       title: 'ADMINISTRATION',
       items: [
         { id: 'role_management', label: 'Users & Roles', icon: Shield, allowedRoles: ['Admin'] },
+        { id: 'data_quality', label: 'Data Quality Dashboard', icon: AlertCircle, allowedRoles: ['Admin'] },
         { id: 'plugin_architecture', label: 'Modular Plugins', icon: Settings, allowedRoles: ['Admin'] },
         { id: 'system_settings', label: 'System Settings', icon: Settings, allowedRoles: ['Admin'] }
       ]

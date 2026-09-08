@@ -2,7 +2,8 @@ import React from 'react';
 import {
   Package, AlertTriangle, ArrowDownLeft, ArrowUpRight, TrendingUp,
   Shield, Layers, Clock, CheckCircle2, ArrowRight, IndianRupee,
-  FileSpreadsheet, Sparkles, Send, Check, Loader2, Database
+  FileSpreadsheet, Sparkles, Send, Check, Loader2, Database,
+  TrendingDown, Activity, Heart, Lightbulb
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, AreaChart, Area
@@ -127,6 +128,60 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     if (status === 'Negative') negativeCount++;
   });
 
+  // Calculate Inventory Health Score (#56)
+  const calculateHealthScore = () => {
+    let score = 100;
+    if (totalItems === 0) return 100;
+
+    // Deduct for negative stock
+    score -= (negativeCount / totalItems) * 40;
+    // Deduct for stockouts
+    score -= (outOfStockCount / totalItems) * 25;
+    // Deduct for critical stock
+    score -= (criticalCount / totalItems) * 15;
+    // Deduct for non-moving
+    score -= (nonMovingCount / totalItems) * 10;
+    // Deduct for overstock
+    score -= (overstockCount / totalItems) * 5;
+
+    return Math.max(0, Math.min(100, score));
+  };
+
+  const healthScore = calculateHealthScore();
+  const getHealthStatus = (s: number) => {
+    if (s > 90) return { label: 'Excellent', color: 'text-emerald-400', bg: 'bg-emerald-500/10' };
+    if (s > 75) return { label: 'Good', color: 'text-emerald-400', bg: 'bg-emerald-500/10' };
+    if (s > 50) return { label: 'Needs Attention', color: 'text-amber-400', bg: 'bg-amber-500/10' };
+    return { label: 'Critical', color: 'text-rose-400', bg: 'bg-rose-500/10' };
+  };
+  const healthInfo = getHealthStatus(healthScore);
+
+  // Management Insights (#118)
+  const getInsights = () => {
+    const insights = [];
+    insights.push(`${formatValuation(totalStockValue)} inventory is currently held across ${totalItems} active items.`);
+    
+    if (overstockCount > 0) {
+      insights.push(`${overstockCount} items are overstocked, tying up excess capital.`);
+    }
+    
+    if (criticalCount > 0 || outOfStockCount > 0) {
+      insights.push(`${criticalCount + outOfStockCount} items may run out before replenishment based on lead times.`);
+    }
+
+    if (nonMovingCount > 0) {
+      insights.push(`${nonMovingCount} items have recorded no consumption for more than 90 days.`);
+    }
+
+    const highValueItems = [...state.items].sort((a, b) => b.stockValue - a.stockValue).slice(0, 3);
+    if (highValueItems.length > 0) {
+      insights.push(`Top 3 high-value items account for ${formatValuation(highValueItems.reduce((s, i) => s + i.stockValue, 0))} of total value.`);
+    }
+
+    return insights;
+  };
+  const insights = getInsights();
+
   // Recharts Category Distribution
   const categoryMap: Record<string, number> = {};
   state.items.forEach(item => {
@@ -144,10 +199,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     <div className="space-y-6">
       {/* Top Welcome Banner */}
       <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-emerald-950/40 border border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-extrabold text-slate-100 mt-1">
-            Inventory & Stock Control Executive Dashboard
-          </h1>
+        <div className="flex items-center gap-4">
+          <div className={`w-16 h-16 rounded-2xl ${healthInfo.bg} border border-slate-800 flex flex-col items-center justify-center`}>
+            <div className={`text-xl font-black ${healthInfo.color}`}>{Math.round(healthScore)}</div>
+            <div className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">Score</div>
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-extrabold text-slate-100">
+                Executive Dashboard
+              </h1>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${healthInfo.color} ${healthInfo.bg} border-current opacity-80`}>
+                Health: {healthInfo.label}
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">Real-time inventory intelligence & consumption analytics</p>
+          </div>
         </div>
  
         <div className="flex items-center gap-2">
@@ -174,6 +241,51 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <ArrowUpRight className="w-4 h-4 text-cyan-400" />
             <span>Issue Material (MIN)</span>
           </button>
+        </div>
+      </div>
+
+      {/* Management Insights (#118) */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div className="lg:col-span-3 p-5 bg-slate-900 border border-slate-800 rounded-2xl">
+          <div className="flex items-center gap-2 mb-4">
+            <Lightbulb className="w-5 h-5 text-amber-400" />
+            <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wider">Management Insights</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-6">
+            {insights.map((insight, idx) => (
+              <div key={idx} className="flex items-start gap-3 text-xs text-slate-300">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                <p className="leading-relaxed">{insight}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col justify-between">
+          <div className="flex items-center gap-2 mb-4">
+            <Activity className="w-5 h-5 text-emerald-400" />
+            <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wider">Health Factors</h3>
+          </div>
+          <div className="space-y-3">
+            {[
+              { label: 'Stock Availability', score: 100 - (outOfStockCount/totalItems)*100 },
+              { label: 'Reorder Compliance', score: 100 - (criticalCount/totalItems)*100 },
+              { label: 'Capital Efficiency', score: 100 - (overstockCount/totalItems)*100 }
+            ].map(f => (
+              <div key={f.label} className="space-y-1">
+                <div className="flex justify-between text-[10px] text-slate-400">
+                  <span>{f.label}</span>
+                  <span>{Math.round(f.score)}%</span>
+                </div>
+                <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-emerald-500 rounded-full" 
+                    style={{ width: `${f.score}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

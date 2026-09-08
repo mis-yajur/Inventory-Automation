@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Network, Plus, UploadCloud, FileText, Loader2 } from 'lucide-react';
+import { Network, Plus, UploadCloud, FileText, Loader2, Edit2, Trash2 } from 'lucide-react';
 import { useCsvParser } from '../hooks/useCsvParser';
 import { AppState } from '../services/store';
 import { Department } from '../types';
@@ -11,6 +11,7 @@ interface DepartmentsViewProps {
 
 export const DepartmentsView: React.FC<DepartmentsViewProps> = ({ state, setState }) => {
   const [showAdd, setShowAdd] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'single' | 'bulk'>('single');
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
@@ -24,25 +25,59 @@ export const DepartmentsView: React.FC<DepartmentsViewProps> = ({ state, setStat
     e.preventDefault();
     if (!name) return;
 
-    const newDept: Department = {
-      id: `dep-${Date.now()}`,
-      code: code || `DEP-0${state.departments.length + 1}`,
-      name,
-      departmentHead: head || 'N/A',
-      costCentre: costCentre || `CC-${name.toUpperCase().slice(0, 4)}`,
-      active: true
-    };
+    if (editingId) {
+      setState(prev => ({
+        ...prev,
+        departments: prev.departments.map(d => d.id === editingId ? { ...d, code, name, departmentHead: head, costCentre } : d)
+      }));
+      setEditingId(null);
+    } else {
+      const newDept: Department = {
+        id: `dep-${Date.now()}`,
+        code: code || `DEP-0${state.departments.length + 1}`,
+        name,
+        departmentHead: head || 'N/A',
+        costCentre: costCentre || `CC-${name.toUpperCase().slice(0, 4)}`,
+        active: true
+      };
 
-    setState(prev => ({
-      ...prev,
-      departments: [...prev.departments, newDept]
-    }));
+      setState(prev => ({
+        ...prev,
+        departments: [...prev.departments, newDept]
+      }));
+    }
 
     setCode('');
     setName('');
     setHead('');
     setCostCentre('');
     setShowAdd(false);
+  };
+
+  const startEdit = (dept: Department) => {
+    setEditingId(dept.id);
+    setCode(dept.code);
+    setName(dept.name);
+    setHead(dept.departmentHead || '');
+    setCostCentre(dept.costCentre || '');
+    setActiveTab('single');
+    setShowAdd(true);
+  };
+
+  const handleDelete = (dept: Department) => {
+    // Check if department is used in any ledger entries or movements
+    const usageCount = state.ledger.filter(l => l.departmentId === dept.id).length;
+    if (usageCount > 0) {
+      alert(`Cannot delete department "${dept.name}" because it has ${usageCount} transaction records.`);
+      return;
+    }
+
+    if (window.confirm(`Are you sure you want to delete the department "${dept.name}"?`)) {
+      setState(prev => ({
+        ...prev,
+        departments: prev.departments.filter(d => d.id !== dept.id)
+      }));
+    }
   };
 
   const handleBulkUploadSubmit = (e: React.FormEvent) => {
@@ -168,6 +203,9 @@ export const DepartmentsView: React.FC<DepartmentsViewProps> = ({ state, setStat
           <div className="p-5">
             {activeTab === 'single' ? (
               <form onSubmit={handleAdd} className="space-y-4">
+                <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                  {editingId ? 'Edit Department' : 'New Department Entry'}
+                </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                   <input
                     type="text"
@@ -200,8 +238,23 @@ export const DepartmentsView: React.FC<DepartmentsViewProps> = ({ state, setStat
                   />
                 </div>
                 <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
-                  <button type="button" onClick={() => setShowAdd(false)} className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg text-xs">Cancel</button>
-                  <button type="submit" className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition">Save Department</button>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setShowAdd(false);
+                      setEditingId(null);
+                      setCode('');
+                      setName('');
+                      setHead('');
+                      setCostCentre('');
+                    }} 
+                    className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg text-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition">
+                    {editingId ? 'Update Department' : 'Save Department'}
+                  </button>
                 </div>
               </form>
             ) : (
@@ -262,13 +315,30 @@ export const DepartmentsView: React.FC<DepartmentsViewProps> = ({ state, setStat
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {state.departments.map(dept => (
-          <div key={dept.id} className="p-4 bg-slate-900 border border-slate-800 rounded-2xl space-y-2">
+          <div key={dept.id} className="p-4 bg-slate-900 border border-slate-800 rounded-2xl space-y-2 group relative">
             <div className="flex items-center justify-between">
               <span className="font-mono text-emerald-400 font-bold text-xs">{dept.code}</span>
               <span className="font-mono text-[10px] text-cyan-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">{dept.costCentre}</span>
             </div>
             <h3 className="font-bold text-sm text-slate-100">{dept.name}</h3>
             <p className="text-xs text-slate-400">Head: <strong className="text-slate-200">{dept.departmentHead}</strong></p>
+            
+            <div className="absolute bottom-4 right-4 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button 
+                onClick={() => startEdit(dept)}
+                className="p-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-lg border border-slate-700 shadow-xl"
+                title="Edit Dept"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+              </button>
+              <button 
+                onClick={() => handleDelete(dept)}
+                className="p-1.5 bg-slate-800 hover:bg-slate-700 text-rose-500 rounded-lg border border-slate-700 shadow-xl"
+                title="Delete Dept"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         ))}
       </div>

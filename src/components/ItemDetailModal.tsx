@@ -1,7 +1,8 @@
 import React from 'react';
 import {
   X, Package, Shield, AlertTriangle, Layers, MapPin, Truck,
-  History, Calendar, ArrowDownLeft, ArrowUpRight, BarChart2
+  History, Calendar, ArrowDownLeft, ArrowUpRight, BarChart2,
+  TrendingUp, TrendingDown, Printer, Download, Search
 } from 'lucide-react';
 import { AppState } from '../services/store';
 import { Item } from '../types';
@@ -40,6 +41,35 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
   // Filter item ledger entries
   const itemLedger = state.ledger.filter(l => l.itemId === item.id || l.itemCode === item.itemCode);
 
+  // Forecasting Logic (#74)
+  const calculateForecast = () => {
+    if (item.avgDailyConsumption === 0) return { trend: 'stable', days: 'Infinite', confidence: 'Low' };
+    
+    const now = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(now.getDate() - 30);
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setDate(now.getDate() - 60);
+
+    const recentIssues = state.ledger
+      .filter(l => l.itemId === item.id && l.transactionType === 'ISSUE' && new Date(l.timestamp) >= thirtyDaysAgo)
+      .reduce((sum, l) => sum + l.outwardQty, 0);
+
+    const prevIssues = state.ledger
+      .filter(l => l.itemId === item.id && l.transactionType === 'ISSUE' && new Date(l.timestamp) >= sixtyDaysAgo && new Date(l.timestamp) < thirtyDaysAgo)
+      .reduce((sum, l) => sum + l.outwardQty, 0);
+
+    const trend = recentIssues > prevIssues * 1.1 ? 'upward' : recentIssues < prevIssues * 0.9 ? 'downward' : 'stable';
+    const effectiveConsumption = trend === 'upward' ? item.avgDailyConsumption * 1.2 : trend === 'downward' ? item.avgDailyConsumption * 0.8 : item.avgDailyConsumption;
+    
+    const days = Math.round(item.availableQty / (effectiveConsumption || 0.1));
+    const confidence = itemLedger.length > 5 ? 'High' : 'Medium';
+
+    return { trend, days, confidence };
+  };
+
+  const forecast = calculateForecast();
+
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-4xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col text-slate-100">
@@ -76,6 +106,13 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
               className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold transition border border-slate-700"
             >
               Edit Master
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-emerald-400 rounded-lg border border-slate-700 transition"
+              title="Print Item Label"
+            >
+              <Printer className="w-4 h-4" />
             </button>
             <button
               onClick={onClose}
@@ -123,6 +160,55 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
                 {suggestedReorder} <span className="text-xs font-normal text-slate-400">{item.unitName}</span>
               </span>
               <span className="text-[10px] text-slate-500 block mt-1">Reorder Lvl: {item.reorderLevel}</span>
+            </div>
+          </div>
+
+          {/* Forecasting & Predictive Insights (#74) */}
+          <div className="p-4 bg-emerald-950/20 border border-emerald-900/30 rounded-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                <TrendingUp className="w-4 h-4" /> Stock-out Forecasting
+              </h4>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${forecast.confidence === 'High' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                {forecast.confidence} Confidence
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex flex-col">
+                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Projected Runout</span>
+                <span className={`text-xl font-black mt-0.5 ${forecast.days === 'Infinite' ? 'text-emerald-400' : Number(forecast.days) < 7 ? 'text-rose-400' : 'text-slate-100'}`}>
+                  {forecast.days === 'Infinite' ? '∞ Days' : `${forecast.days} Days`}
+                </span>
+                <p className="text-[10px] text-slate-500 mt-1">Based on {forecast.trend} consumption trend</p>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Consumption Trend</span>
+                <div className="flex items-center gap-2 mt-1">
+                  {forecast.trend === 'upward' ? (
+                    <>
+                      <TrendingUp className="w-5 h-5 text-rose-400" />
+                      <span className="text-sm font-bold text-rose-400">+20% Spike</span>
+                    </>
+                  ) : forecast.trend === 'downward' ? (
+                    <>
+                      <TrendingDown className="w-5 h-5 text-emerald-400" />
+                      <span className="text-sm font-bold text-emerald-400">-15% Decline</span>
+                    </>
+                  ) : (
+                    <>
+                      <Activity className="w-5 h-5 text-slate-400" />
+                      <span className="text-sm font-bold text-slate-400">Stable</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Next Reorder Target</span>
+                <span className="text-sm font-black text-amber-400 mt-1">
+                  {new Date(Date.now() + (Number(forecast.days) || 0) * 86400000).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                </span>
+                <p className="text-[10px] text-slate-500 mt-1">Action advised before stock-out risk</p>
+              </div>
             </div>
           </div>
 
